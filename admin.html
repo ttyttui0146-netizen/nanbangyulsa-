@@ -353,7 +353,6 @@ html,body{height:100%;font-family:-apple-system,'Noto Sans KR',sans-serif}
       <option value="">선택</option>
       <option value="난방설치 및 AS">🔧 난방설치 및 AS</option>
       <option value="에어컨세척">❄️ 에어컨세척</option>
-      <option value="기타">📝 기타</option>
     </select>
     <label class="modal-label">메모 (선택)</label>
     <textarea class="modal-input modal-ta" id="orderMemo" placeholder="특이사항 등..."></textarea>
@@ -601,7 +600,7 @@ function renderWorkers(){
     const tot=recs.reduce((s,r)=>s+(r.amount||0),0);
     const on=tR.length>0;
     const loc=locations.find(l=>l.worker===w);
-    const locText=loc?'📍 위치 공유 중':'';
+    const locText=loc ? (loc.locationText ? `📍 ${loc.locationText}` : '📍 위치 공유 중') : '';
     const planItems=tP.map(p=>{
       const tr=fmtTimeRange(p);
       return `<div class="worker-plan-item">
@@ -618,7 +617,8 @@ function renderWorkers(){
       <div class="worker-card-header">
         <div class="w-av wc${i%5}">${w[0]}</div>
         <div class="w-info">
-          <div class="w-name">${w} ${locText}</div>
+          <div class="w-name">${w}</div>
+          ${locText?`<div style="font-size:11px;color:var(--green-dark);font-weight:600;margin-top:2px">${locText}</div>`:'<div style="font-size:11px;color:var(--text-hint);margin-top:2px">위치 미공유</div>'}
           <div class="w-meta">오늘 ${tR.length}건 · 일정 ${dP}/${tP.length}</div>
           <span class="w-badge" style="${on?'background:var(--green-bg);color:var(--green-deeper)':'background:var(--gray-bg);color:var(--text-hint)'}">${on?'작업중':'대기중'}</span>
         </div>
@@ -650,32 +650,26 @@ function renderWRecs(){
 
 /* ── 지도 ── */
 function initMap(){
-  if(mapInstance){
-    setTimeout(()=>{ mapInstance.invalidateSize(); updateMapMarkers(); }, 200);
-    return;
-  }
-  if(typeof L==='undefined'){ setTimeout(initMap, 500); return; }
-  const mapEl = document.getElementById('locationMap');
-  mapEl.style.display='block';
-  document.getElementById('locOffline').style.display='none';
+  if(mapInstance)return;
+  if(typeof L==='undefined')return;
   mapInstance=L.map('locationMap',{zoomControl:true}).setView([37.5665,126.9780],11);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap',maxZoom:18}).addTo(mapInstance);
-  setTimeout(()=>{ mapInstance.invalidateSize(); updateMapMarkers(); }, 300);
+  updateMapMarkers();
 }
 
 function updateMapMarkers(){
-  if(!mapInstance) return;
+  if(!mapInstance)return;
   const workers=Object.keys(workerMap);
   const locEl=document.getElementById('locOffline');
-  const validLocs = locations.filter(l=>l.lat&&l.lng);
-  if(validLocs.length===0){
+  if(locations.length===0){
     locEl.style.display='block';
     document.getElementById('locationMap').style.display='none';
     return;
   }
   locEl.style.display='none';
   document.getElementById('locationMap').style.display='block';
-  validLocs.forEach(loc=>{
+  locations.forEach(loc=>{
+    if(!loc.lat||!loc.lng)return;
     const wIdx=workers.indexOf(loc.worker);
     const color=['#085041','#042C53','#412402','#4B1528','#173404'][wIdx%5]||'#1D9E75';
     const icon=L.divIcon({className:'',html:`<div style="background:${color};color:#fff;padding:4px 8px;border-radius:20px;font-size:11px;font-weight:700;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,0.3)">${loc.worker}</div>`,iconAnchor:[0,0]});
