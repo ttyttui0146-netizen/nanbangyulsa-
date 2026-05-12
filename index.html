@@ -103,19 +103,18 @@ input:checked+.toggle-slider::before{transform:translateX(22px)}
 .cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
 .cal-nav-btn{background:none;border:none;font-size:20px;color:var(--text-sub);cursor:pointer;padding:4px 10px}
 .cal-month{font-size:17px;font-weight:700;color:var(--text)}
-.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:0;margin-bottom:6px;border-left:1px solid var(--border-light);border-top:1px solid var(--border-light)}
-.cal-dow{text-align:center;font-size:11px;font-weight:600;color:var(--text-hint);padding:6px 0;border-right:1px solid var(--border-light);border-bottom:1px solid var(--border-light)}
-.cal-day{min-height:64px;display:flex;flex-direction:column;align-items:stretch;cursor:pointer;font-size:12px;font-weight:500;color:var(--text);transition:background 0.12s;padding:4px 2px 2px;border-right:1px solid var(--border-light);border-bottom:1px solid var(--border-light);position:relative}
-.cal-day.empty{cursor:default;background:var(--gray-bg)}
-.cal-day-num{width:24px;height:24px;display:flex;align-items:center;justify-content:center;border-radius:50%;font-size:12px;font-weight:500;margin:0 auto 2px;flex-shrink:0}
-.cal-day.today .cal-day-num{background:var(--green);color:#fff;font-weight:700}
-.cal-day.selected .cal-day-num{background:var(--green-bg);color:var(--green-deeper);font-weight:700}
-.cal-day.sunday .cal-day-num{color:#E24B4A}
-.cal-day-events{display:flex;flex-direction:column;gap:1px;padding:0 1px}
-.cal-event-bar{font-size:10px;font-weight:600;padding:1px 4px;border-radius:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.5}
-.cal-event-bar.plan{background:var(--green);color:#fff}
-.cal-event-bar.record{background:#378ADD;color:#fff}
-.cal-more{font-size:10px;color:var(--text-hint);padding:0 4px;font-weight:500}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:14px}
+.cal-dow{text-align:center;font-size:11px;font-weight:600;color:var(--text-hint);padding:4px 0}
+.cal-day{height:40px;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500;color:var(--text);transition:background 0.12s;padding:0}
+.cal-day.empty{cursor:default}
+.cal-day.today{background:var(--green);color:#fff;font-weight:700}
+.cal-day.selected{background:var(--green-bg);color:var(--green-deeper);font-weight:700}
+.cal-day.sunday{color:#E24B4A}
+.cal-dots{display:flex;gap:2px;margin-top:3px;justify-content:center}
+.cal-dot{width:5px;height:5px;border-radius:50%}
+.cal-dot-plan{background:var(--green)}
+.cal-dot-record{background:#378ADD}
+.cal-day.today .cal-dot{background:rgba(255,255,255,0.8)}
 .cal-detail{background:var(--white);border-radius:var(--radius);border:1px solid var(--border);overflow:hidden}
 .cal-detail-header{padding:14px 16px 10px;border-bottom:1px solid var(--border-light);display:flex;align-items:center;justify-content:space-between}
 .cal-detail-date{font-size:14px;font-weight:700;color:var(--text)}
@@ -168,9 +167,10 @@ input:checked+.toggle-slider::before{transform:translateX(22px)}
     </div>
     <div class="card">
       <div class="card-title">작업 내용</div>
-      <div class="chip-group chip-group-2" style="margin-bottom:12px">
+      <div class="chip-group chip-group-3" style="margin-bottom:12px">
         <div class="chip" onclick="selectWork(this,'난방설치 및 AS')"><span class="chip-icon">🔧</span>난방설치 및 AS</div>
         <div class="chip" onclick="selectWork(this,'에어컨세척')"><span class="chip-icon">❄️</span>에어컨세척</div>
+        <div class="chip" onclick="selectWork(this,'기타')"><span class="chip-icon">📝</span>기타</div>
       </div>
       <label class="label">세부 메모 (선택)</label>
       <textarea class="input-field textarea" id="memo" placeholder="특이사항, 부품 교체 내용 등..."></textarea>
@@ -239,7 +239,7 @@ input:checked+.toggle-slider::before{transform:translateX(22px)}
     <div class="top-bar-sub">출장 일정 · 업무 기록</div>
   </div>
   <div class="scroll-area">
-    <div class="card" style="padding:14px 10px 10px">
+    <div class="card" style="padding:14px 10px">
       <div class="cal-nav">
         <button class="cal-nav-btn" onclick="moveMonth(-1)">‹</button>
         <div class="cal-month" id="calMonthLabel"></div>
@@ -322,6 +322,7 @@ input:checked+.toggle-slider::before{transform:translateX(22px)}
           <option value="">선택</option>
           <option value="난방설치 및 AS">🔧 난방설치 및 AS</option>
           <option value="에어컨세척">❄️ 에어컨세척</option>
+          <option value="기타">📝 기타</option>
         </select>
       </div>
     </div>
@@ -347,9 +348,10 @@ input:checked+.toggle-slider::before{transform:translateX(22px)}
     <label class="label">연락처</label>
     <input class="input-field" type="tel" id="editPhone" placeholder="010-0000-0000" oninput="fmtPhone(this)" inputmode="tel"/>
     <label class="label">작업 내용</label>
-    <div class="chip-group chip-group-2" style="margin-bottom:4px">
+    <div class="chip-group chip-group-3" style="margin-bottom:4px">
       <div class="chip" id="editW1" onclick="setEditWork(this,'난방설치 및 AS')"><span class="chip-icon">🔧</span>난방설치 및 AS</div>
       <div class="chip" id="editW2" onclick="setEditWork(this,'에어컨세척')"><span class="chip-icon">❄️</span>에어컨세척</div>
+      <div class="chip" id="editW3" onclick="setEditWork(this,'기타')"><span class="chip-icon">📝</span>기타</div>
     </div>
     <label class="label">메모</label>
     <textarea class="input-field textarea" id="editMemo"></textarea>
@@ -399,6 +401,7 @@ input:checked+.toggle-slider::before{transform:translateX(22px)}
           <option value="">선택</option>
           <option value="난방설치 및 AS">🔧 난방설치 및 AS</option>
           <option value="에어컨세척">❄️ 에어컨세척</option>
+          <option value="기타">📝 기타</option>
         </select>
       </div>
     </div>
@@ -638,9 +641,10 @@ function openEditModal(id) {
   document.getElementById('editAmount').value = r.amount || '';
   document.getElementById('editPaid').checked = r.paid || false;
   // 작업 선택
-  ['editW1','editW2'].forEach(id => document.getElementById(id).classList.remove('active'));
+  ['editW1','editW2','editW3'].forEach(id => document.getElementById(id).classList.remove('active'));
   if (r.work === '난방설치 및 AS') document.getElementById('editW1').classList.add('active');
   if (r.work === '에어컨세척') document.getElementById('editW2').classList.add('active');
+  if (r.work === '기타') document.getElementById('editW3').classList.add('active');
   // 결제 선택
   ['editP1','editP2','editP3'].forEach(id => document.getElementById(id).classList.remove('active'));
   if (r.pay === '현금') document.getElementById('editP1').classList.add('active');
@@ -655,7 +659,7 @@ function closeEditModal() {
   editingId = null;
 }
 function setEditWork(el, v) {
-  ['editW1','editW2'].forEach(id => document.getElementById(id).classList.remove('active'));
+  ['editW1','editW2','editW3'].forEach(id => document.getElementById(id).classList.remove('active'));
   el.classList.add('active'); editWork = v;
 }
 function setEditPay(el, v) {
@@ -785,7 +789,7 @@ function renderPlans() {
           <svg class="plan-check-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
         </div>
         <div class="plan-info">
-          <div class="plan-name">${p.work?'<span style="font-weight:400;color:var(--text-sub)">'+(p.work==='에어컨세척'?'❄️ 에어컨세척':'🔧 난방설치 및 AS')+'</span>':'작업 미정'}</div>
+          <div class="plan-name">${p.work?'<span style="font-weight:400;color:var(--text-sub)">'+(p.work==='에어컨세척'?'❄️ 에어컨세척':p.work==='기타'?'📝 기타':'🔧 난방설치 및 AS')+'</span>':'작업 미정'}</div>
           <div class="plan-addr">${p.addr}</div>
         </div>
         ${p.time?`<div class="plan-time-badge" style="font-size:11px">${p.time}</div>`:''}
@@ -921,7 +925,7 @@ function renderCalendar() {
   ['일','월','화','수','목','금','토'].forEach((d,i) => {
     const el = document.createElement('div');
     el.className = 'cal-dow';
-    if(i===0) el.style.color='#E24B4A';
+    el.style.color = i === 0 ? '#E24B4A' : '';
     el.textContent = d; grid.appendChild(el);
   });
   const firstDay = new Date(calYear, calMonth, 1).getDay();
@@ -930,58 +934,24 @@ function renderCalendar() {
   for (let d = 1; d <= daysInMonth; d++) {
     const dateStr = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     const dow = (firstDay+d-1)%7;
-    const dayPlans = plans.filter(p => p.date === dateStr && p.worker === fixedWorker);
-    const dayRecs  = records.filter(r => r.date === dateStr && r.worker === fixedWorker);
+    const hasPlans = plans.some(p => p.date === dateStr && p.worker === fixedWorker);
+    const hasRecs  = records.some(r => r.date === dateStr && r.worker === fixedWorker);
     const isToday = dateStr === todayStr;
     const isSel = dateStr === calSelectedDate;
     const el = document.createElement('div');
     let cls = 'cal-day';
-    if (dow === 0) cls += ' sunday';
     if (isToday) cls += ' today';
     else if (isSel) cls += ' selected';
+    else if (dow === 0) cls += ' sunday';
     el.className = cls;
     el.onclick = () => { calSelectedDate = dateStr; renderCalendar(); };
-
-    // 날짜 숫자
-    const numEl = document.createElement('div');
-    numEl.className = 'cal-day-num';
-    numEl.textContent = d;
-    el.appendChild(numEl);
-
-    // 이벤트 바
-    const eventsEl = document.createElement('div');
-    eventsEl.className = 'cal-day-events';
-
-    const maxShow = 2;
-    let shown = 0;
-
-    dayPlans.forEach(p => {
-      if(shown >= maxShow) return;
-      const bar = document.createElement('div');
-      bar.className = 'cal-event-bar plan';
-      bar.textContent = (p.time ? p.time+' ' : '') + (p.work || '일정');
-      eventsEl.appendChild(bar);
-      shown++;
-    });
-
-    dayRecs.forEach(r => {
-      if(shown >= maxShow) return;
-      const bar = document.createElement('div');
-      bar.className = 'cal-event-bar record';
-      bar.textContent = r.work || '기록';
-      eventsEl.appendChild(bar);
-      shown++;
-    });
-
-    const total = dayPlans.length + dayRecs.length;
-    if(total > maxShow) {
-      const more = document.createElement('div');
-      more.className = 'cal-more';
-      more.textContent = `+${total - maxShow}개 더`;
-      eventsEl.appendChild(more);
+    el.innerHTML = `<span>${d}</span>`;
+    if (hasPlans || hasRecs) {
+      const dots = document.createElement('div'); dots.className = 'cal-dots';
+      if (hasPlans) { const dot = document.createElement('div'); dot.className='cal-dot cal-dot-plan'; dots.appendChild(dot); }
+      if (hasRecs)  { const dot = document.createElement('div'); dot.className='cal-dot cal-dot-record'; dots.appendChild(dot); }
+      el.appendChild(dots);
     }
-
-    el.appendChild(eventsEl);
     grid.appendChild(el);
   }
   renderCalDetail(calSelectedDate);
