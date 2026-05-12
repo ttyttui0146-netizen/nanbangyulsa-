@@ -4,14 +4,9 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="default"/>
 <meta name="apple-mobile-web-app-title" content="출장기록"/>
 <meta name="mobile-web-app-capable" content="yes"/>
-<meta name="theme-color" content="#1D9E75"/>
-<meta name="description" content="난방설치·AS·에어컨세척 출장 업무 관리"/>
-<link rel="manifest" href="/manifest.json"/>
-<link rel="apple-touch-icon" href="/icon-192.png"/>
-<link rel="apple-touch-startup-image" href="/icon-512.png"/>
 <title>출장 업무 기록</title>
 <style>
 :root{--green:#1D9E75;--green-dark:#0F6E56;--green-deeper:#085041;--green-bg:#E1F5EE;--green-border:#9FE1CB;--red-bg:#FCEBEB;--red-text:#501313;--gray-bg:#F5F5F3;--border:#E0E0DC;--border-light:#EBEBEA;--text:#1A1A1A;--text-sub:#666660;--text-hint:#999994;--white:#FFFFFF;--radius:12px;--radius-sm:8px}
@@ -108,18 +103,19 @@ input:checked+.toggle-slider::before{transform:translateX(22px)}
 .cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
 .cal-nav-btn{background:none;border:none;font-size:20px;color:var(--text-sub);cursor:pointer;padding:4px 10px}
 .cal-month{font-size:17px;font-weight:700;color:var(--text)}
-.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:14px}
-.cal-dow{text-align:center;font-size:11px;font-weight:600;color:var(--text-hint);padding:4px 0}
-.cal-day{height:40px;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500;color:var(--text);transition:background 0.12s;padding:0}
-.cal-day.empty{cursor:default}
-.cal-day.today{background:var(--green);color:#fff;font-weight:700}
-.cal-day.selected{background:var(--green-bg);color:var(--green-deeper);font-weight:700}
-.cal-day.sunday{color:#E24B4A}
-.cal-dots{display:flex;gap:2px;margin-top:3px;justify-content:center}
-.cal-dot{width:5px;height:5px;border-radius:50%}
-.cal-dot-plan{background:var(--green)}
-.cal-dot-record{background:#378ADD}
-.cal-day.today .cal-dot{background:rgba(255,255,255,0.8)}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:0;margin-bottom:6px;border-left:1px solid var(--border-light);border-top:1px solid var(--border-light)}
+.cal-dow{text-align:center;font-size:11px;font-weight:600;color:var(--text-hint);padding:6px 0;border-right:1px solid var(--border-light);border-bottom:1px solid var(--border-light)}
+.cal-day{min-height:64px;display:flex;flex-direction:column;align-items:stretch;cursor:pointer;font-size:12px;font-weight:500;color:var(--text);transition:background 0.12s;padding:4px 2px 2px;border-right:1px solid var(--border-light);border-bottom:1px solid var(--border-light);position:relative}
+.cal-day.empty{cursor:default;background:var(--gray-bg)}
+.cal-day-num{width:24px;height:24px;display:flex;align-items:center;justify-content:center;border-radius:50%;font-size:12px;font-weight:500;margin:0 auto 2px;flex-shrink:0}
+.cal-day.today .cal-day-num{background:var(--green);color:#fff;font-weight:700}
+.cal-day.selected .cal-day-num{background:var(--green-bg);color:var(--green-deeper);font-weight:700}
+.cal-day.sunday .cal-day-num{color:#E24B4A}
+.cal-day-events{display:flex;flex-direction:column;gap:1px;padding:0 1px}
+.cal-event-bar{font-size:10px;font-weight:600;padding:1px 4px;border-radius:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.5}
+.cal-event-bar.plan{background:var(--green);color:#fff}
+.cal-event-bar.record{background:#378ADD;color:#fff}
+.cal-more{font-size:10px;color:var(--text-hint);padding:0 4px;font-weight:500}
 .cal-detail{background:var(--white);border-radius:var(--radius);border:1px solid var(--border);overflow:hidden}
 .cal-detail-header{padding:14px 16px 10px;border-bottom:1px solid var(--border-light);display:flex;align-items:center;justify-content:space-between}
 .cal-detail-date{font-size:14px;font-weight:700;color:var(--text)}
@@ -243,7 +239,7 @@ input:checked+.toggle-slider::before{transform:translateX(22px)}
     <div class="top-bar-sub">출장 일정 · 업무 기록</div>
   </div>
   <div class="scroll-area">
-    <div class="card" style="padding:14px 10px">
+    <div class="card" style="padding:14px 10px 10px">
       <div class="cal-nav">
         <button class="cal-nav-btn" onclick="moveMonth(-1)">‹</button>
         <div class="cal-month" id="calMonthLabel"></div>
@@ -319,6 +315,7 @@ input:checked+.toggle-slider::before{transform:translateX(22px)}
     <label class="label">연락처</label>
     <input class="input-field" type="tel" id="planPhone" placeholder="010-0000-0000" oninput="fmtPhone(this)" inputmode="tel"/>
     <div class="two-col" style="margin-top:10px">
+      <div><label class="label" style="margin-top:0">예정 시간</label><input class="input-field" type="time" id="planTime"/></div>
       <div>
         <label class="label" style="margin-top:0">작업 종류</label>
         <select class="input-field" id="planWork" style="padding:11px 10px">
@@ -327,13 +324,6 @@ input:checked+.toggle-slider::before{transform:translateX(22px)}
           <option value="에어컨세척">❄️ 에어컨세척</option>
         </select>
       </div>
-      <div></div>
-    </div>
-    <label class="label">예정 시간</label>
-    <div style="display:flex;align-items:center;gap:8px">
-      <input class="input-field" type="time" id="planTimeStart" style="flex:1"/>
-      <span style="color:var(--text-hint);font-weight:600;flex-shrink:0">~</span>
-      <input class="input-field" type="time" id="planTimeEnd" style="flex:1"/>
     </div>
     <label class="label">메모 (선택)</label>
     <input class="input-field" id="planMemo" placeholder="특이사항 등..."/>
@@ -402,6 +392,7 @@ input:checked+.toggle-slider::before{transform:translateX(22px)}
     <label class="label">연락처</label>
     <input class="input-field" type="tel" id="pePhone" placeholder="010-0000-0000" oninput="fmtPhone(this)" inputmode="tel"/>
     <div class="two-col" style="margin-top:10px">
+      <div><label class="label" style="margin-top:0">예정 시간</label><input class="input-field" type="time" id="peTime"/></div>
       <div>
         <label class="label" style="margin-top:0">작업 종류</label>
         <select class="input-field" id="peWork" style="padding:11px 10px">
@@ -410,13 +401,6 @@ input:checked+.toggle-slider::before{transform:translateX(22px)}
           <option value="에어컨세척">❄️ 에어컨세척</option>
         </select>
       </div>
-      <div></div>
-    </div>
-    <label class="label">예정 시간</label>
-    <div style="display:flex;align-items:center;gap:8px">
-      <input class="input-field" type="time" id="peTimeStart" style="flex:1"/>
-      <span style="color:var(--text-hint);font-weight:600;flex-shrink:0">~</span>
-      <input class="input-field" type="time" id="peTimeEnd" style="flex:1"/>
     </div>
     <label class="label">메모</label>
     <input class="input-field" id="peMemo" placeholder="특이사항 등..."/>
@@ -429,26 +413,6 @@ input:checked+.toggle-slider::before{transform:translateX(22px)}
     </div>
     <button onclick="deletePlanFromEdit()" style="width:100%;margin-top:10px;background:none;border:1.5px solid #E24B4A;color:#E24B4A;border-radius:var(--radius);padding:12px;font-size:14px;font-weight:600;cursor:pointer">🗑 이 일정 삭제</button>
   </div>
-</div>
-
-<!-- 승인 대기 화면 -->
-<div id="pendingScreen" style="display:none;position:fixed;inset:0;background:var(--gray-bg);z-index:1000;display:none;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;text-align:center">
-  <div style="font-size:60px;margin-bottom:20px">⏳</div>
-  <div style="font-size:20px;font-weight:700;color:var(--text);margin-bottom:10px">승인 대기 중</div>
-  <div style="font-size:14px;color:var(--text-sub);line-height:1.7;margin-bottom:24px">관리자가 계정을 승인하면<br/>앱을 사용할 수 있습니다.<br/>잠시만 기다려주세요.</div>
-  <div style="background:var(--white);border-radius:var(--radius);border:1px solid var(--border);padding:16px 24px;margin-bottom:24px">
-    <div style="font-size:13px;color:var(--text-hint);margin-bottom:4px">신청한 이름</div>
-    <div style="font-size:18px;font-weight:700;color:var(--text)" id="pendingName">-</div>
-  </div>
-  <button onclick="cancelRequest()" style="background:none;border:1.5px solid var(--border);border-radius:var(--radius);padding:12px 24px;font-size:14px;color:var(--text-sub);cursor:pointer">다른 이름으로 다시 신청</button>
-</div>
-
-<!-- 거절 화면 -->
-<div id="rejectedScreen" style="display:none;position:fixed;inset:0;background:var(--gray-bg);z-index:1000;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;text-align:center">
-  <div style="font-size:60px;margin-bottom:20px">❌</div>
-  <div style="font-size:20px;font-weight:700;color:var(--text);margin-bottom:10px">승인이 거절됐습니다</div>
-  <div style="font-size:14px;color:var(--text-sub);line-height:1.7;margin-bottom:24px">관리자에게 문의하거나<br/>다시 신청해주세요.</div>
-  <button onclick="cancelRequest()" style="background:var(--green);color:#fff;border:none;border-radius:var(--radius);padding:13px 32px;font-size:15px;font-weight:700;cursor:pointer">다시 신청하기</button>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -523,106 +487,15 @@ function fmtPhone(el) {
 window.fmtPhone = fmtPhone;
 
 /* ── 작업자 ── */
-/* ── 작업자 승인 시스템 ── */
-async function initWorker() {
-  if (!fixedWorker) {
-    openWorkerSetting();
-    return;
-  }
-  // Firebase에서 승인 상태 확인
-  await checkApprovalStatus(fixedWorker);
+function initWorker() {
+  if (!fixedWorker) openWorkerSetting();
+  else document.getElementById('workerDisplay').textContent = fixedWorker;
 }
-
-async function checkApprovalStatus(name) {
-  try {
-    const snap = await getDoc(doc(db, 'workerRequests', name));
-    if (!snap.exists()) {
-      // 첫 사용자 - 신청서 제출
-      await submitRequest(name);
-      return;
-    }
-    const status = snap.data().status;
-    if (status === 'approved') {
-      // 승인됨 - 정상 사용
-      document.getElementById('workerDisplay').textContent = fixedWorker;
-      showMainApp();
-    } else if (status === 'pending') {
-      // 대기 중
-      showPendingScreen(name);
-    } else if (status === 'rejected') {
-      // 거절됨
-      showRejectedScreen();
-    }
-  } catch(e) {
-    // 네트워크 오류 시 로컬 승인 상태로 폴백
-    if (localStorage.getItem('approved_'+name) === '1') {
-      document.getElementById('workerDisplay').textContent = fixedWorker;
-      showMainApp();
-    } else {
-      showPendingScreen(name);
-    }
-  }
-}
-
-async function submitRequest(name) {
-  await setDoc(doc(db, 'workerRequests', name), {
-    name, status: 'pending', createdAt: serverTimestamp()
-  });
-  showPendingScreen(name);
-}
-
-function showMainApp() {
-  document.getElementById('pendingScreen').style.display = 'none';
-  document.getElementById('rejectedScreen').style.display = 'none';
-  document.querySelectorAll('.page, .tab-bar').forEach(el => el.style.display = '');
-  // 승인 상태 로컬 캐시
-  localStorage.setItem('approved_'+fixedWorker, '1');
-}
-
-function showPendingScreen(name) {
-  document.getElementById('pendingName').textContent = name;
-  document.getElementById('pendingScreen').style.display = 'flex';
-  document.getElementById('rejectedScreen').style.display = 'none';
-  // 페이지들 숨기기
-  document.querySelectorAll('.page, .tab-bar').forEach(el => el.style.display = 'none');
-  // 승인 실시간 감지
-  const unsub = onSnapshot(doc(db, 'workerRequests', name), snap => {
-    if (!snap.exists()) return;
-    const status = snap.data().status;
-    if (status === 'approved') {
-      unsub();
-      document.getElementById('workerDisplay').textContent = fixedWorker;
-      showMainApp();
-      showToast('✓ 승인됐습니다! 환영합니다 😊');
-    } else if (status === 'rejected') {
-      unsub();
-      showRejectedScreen();
-    }
-  });
-}
-
-function showRejectedScreen() {
-  document.getElementById('pendingScreen').style.display = 'none';
-  document.getElementById('rejectedScreen').style.display = 'flex';
-  document.querySelectorAll('.page, .tab-bar').forEach(el => el.style.display = 'none');
-}
-
-window.cancelRequest = async function() {
-  if (fixedWorker) {
-    try { await updateDoc(doc(db,'workerRequests',fixedWorker),{status:'cancelled'}); } catch(e){}
-  }
-  localStorage.removeItem('fixedWorker');
-  localStorage.removeItem('approved_'+fixedWorker);
-  fixedWorker = '';
-  document.getElementById('pendingScreen').style.display = 'none';
-  document.getElementById('rejectedScreen').style.display = 'none';
-  openWorkerSetting();
-};
 function openWorkerSetting() {
   document.getElementById('workerInput').value = fixedWorker;
   document.getElementById('workerModal').classList.add('open');
 }
-async function saveWorkerSetting() {
+function saveWorkerSetting() {
   const name = document.getElementById('workerInput').value.trim();
   if (!name) { showToast('이름을 입력해주세요'); return; }
   fixedWorker = name;
@@ -630,8 +503,6 @@ async function saveWorkerSetting() {
   document.getElementById('workerDisplay').textContent = fixedWorker;
   document.getElementById('workerModal').classList.remove('open');
   showToast('✓ 작업자 설정 완료!');
-  // 승인 상태 확인
-  await checkApprovalStatus(name);
 }
 window.openWorkerSetting = openWorkerSetting;
 window.saveWorkerSetting = saveWorkerSetting;
@@ -849,8 +720,8 @@ function openPlanModal() {
   document.getElementById('planPhone').value = '';
   document.getElementById('planMemo').value = '';
   document.getElementById('planWork').value = '';
-  document.getElementById('planTimeStart').value = '';
-  document.getElementById('planTimeEnd').value = '';
+  const now = new Date();
+  document.getElementById('planTime').value = String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
   document.getElementById('planModal').classList.add('open');
 }
 function closePlanModal() { document.getElementById('planModal').classList.remove('open'); }
@@ -860,9 +731,7 @@ window.closePlanModal = closePlanModal;
 async function savePlan() {
   const addr = document.getElementById('planAddr').value.trim();
   const phone = document.getElementById('planPhone').value.trim();
-  const timeStart = document.getElementById('planTimeStart').value;
-  const timeEnd = document.getElementById('planTimeEnd').value;
-  const time = timeStart && timeEnd ? `${timeStart}~${timeEnd}` : (timeStart || timeEnd || '');
+  const time = document.getElementById('planTime').value;
   const work = document.getElementById('planWork').value;
   const memo = document.getElementById('planMemo').value.trim();
   const targetDate = document._planTargetDate || getTodayStr();
@@ -871,7 +740,7 @@ async function savePlan() {
   showSync(true);
   try {
     await addDoc(collection(db, 'plans'), {
-      date: targetDate, addr, phone, timeStart, timeEnd, time, work, memo,
+      date: targetDate, addr, phone, time, work, memo,
       worker: fixedWorker, done: false, createdAt: serverTimestamp()
     });
     closePlanModal();
@@ -960,18 +829,7 @@ function openPlanEditModal(id) {
   document.getElementById('peDate').value = p.date || getTodayStr();
   document.getElementById('peAddr').value = p.addr || '';
   document.getElementById('pePhone').value = p.phone || '';
-  // 기존 time 필드 하위 호환 처리
-  if (p.timeStart) {
-    document.getElementById('peTimeStart').value = p.timeStart;
-    document.getElementById('peTimeEnd').value = p.timeEnd || '';
-  } else if (p.time && p.time.includes('~')) {
-    const parts = p.time.split('~');
-    document.getElementById('peTimeStart').value = parts[0] || '';
-    document.getElementById('peTimeEnd').value = parts[1] || '';
-  } else {
-    document.getElementById('peTimeStart').value = p.time || '';
-    document.getElementById('peTimeEnd').value = '';
-  }
+  document.getElementById('peTime').value = p.time || '';
   document.getElementById('peWork').value = p.work || '';
   document.getElementById('peMemo').value = p.memo || '';
   document.getElementById('planEditModal').classList.add('open');
@@ -984,16 +842,13 @@ async function savePlanEdit() {
   if (!editingPlanId) return;
   const addr = document.getElementById('peAddr').value.trim();
   if (!addr) { showToast('주소를 입력해주세요'); return; }
-  const timeStart = document.getElementById('peTimeStart').value;
-  const timeEnd = document.getElementById('peTimeEnd').value;
-  const time = timeStart && timeEnd ? `${timeStart}~${timeEnd}` : (timeStart || timeEnd || '');
   showSync(true);
   try {
     await updateDoc(doc(db, 'plans', editingPlanId), {
       date: document.getElementById('peDate').value,
       addr,
       phone: document.getElementById('pePhone').value.trim(),
-      timeStart, timeEnd, time,
+      time: document.getElementById('peTime').value,
       work: document.getElementById('peWork').value,
       memo: document.getElementById('peMemo').value.trim(),
     });
@@ -1066,7 +921,7 @@ function renderCalendar() {
   ['일','월','화','수','목','금','토'].forEach((d,i) => {
     const el = document.createElement('div');
     el.className = 'cal-dow';
-    el.style.color = i === 0 ? '#E24B4A' : '';
+    if(i===0) el.style.color='#E24B4A';
     el.textContent = d; grid.appendChild(el);
   });
   const firstDay = new Date(calYear, calMonth, 1).getDay();
@@ -1075,24 +930,58 @@ function renderCalendar() {
   for (let d = 1; d <= daysInMonth; d++) {
     const dateStr = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     const dow = (firstDay+d-1)%7;
-    const hasPlans = plans.some(p => p.date === dateStr && p.worker === fixedWorker);
-    const hasRecs  = records.some(r => r.date === dateStr && r.worker === fixedWorker);
+    const dayPlans = plans.filter(p => p.date === dateStr && p.worker === fixedWorker);
+    const dayRecs  = records.filter(r => r.date === dateStr && r.worker === fixedWorker);
     const isToday = dateStr === todayStr;
     const isSel = dateStr === calSelectedDate;
     const el = document.createElement('div');
     let cls = 'cal-day';
+    if (dow === 0) cls += ' sunday';
     if (isToday) cls += ' today';
     else if (isSel) cls += ' selected';
-    else if (dow === 0) cls += ' sunday';
     el.className = cls;
     el.onclick = () => { calSelectedDate = dateStr; renderCalendar(); };
-    el.innerHTML = `<span>${d}</span>`;
-    if (hasPlans || hasRecs) {
-      const dots = document.createElement('div'); dots.className = 'cal-dots';
-      if (hasPlans) { const dot = document.createElement('div'); dot.className='cal-dot cal-dot-plan'; dots.appendChild(dot); }
-      if (hasRecs)  { const dot = document.createElement('div'); dot.className='cal-dot cal-dot-record'; dots.appendChild(dot); }
-      el.appendChild(dots);
+
+    // 날짜 숫자
+    const numEl = document.createElement('div');
+    numEl.className = 'cal-day-num';
+    numEl.textContent = d;
+    el.appendChild(numEl);
+
+    // 이벤트 바
+    const eventsEl = document.createElement('div');
+    eventsEl.className = 'cal-day-events';
+
+    const maxShow = 2;
+    let shown = 0;
+
+    dayPlans.forEach(p => {
+      if(shown >= maxShow) return;
+      const bar = document.createElement('div');
+      bar.className = 'cal-event-bar plan';
+      bar.textContent = (p.time ? p.time+' ' : '') + (p.work || '일정');
+      eventsEl.appendChild(bar);
+      shown++;
+    });
+
+    dayRecs.forEach(r => {
+      if(shown >= maxShow) return;
+      const bar = document.createElement('div');
+      bar.className = 'cal-event-bar record';
+      bar.textContent = r.work || '기록';
+      eventsEl.appendChild(bar);
+      shown++;
+    });
+
+    const total = dayPlans.length + dayRecs.length;
+    if(total > maxShow) {
+      const more = document.createElement('div');
+      more.className = 'cal-more';
+      more.textContent = `+${total - maxShow}개 더`;
+      eventsEl.appendChild(more);
     }
+
+    el.appendChild(eventsEl);
     grid.appendChild(el);
   }
   renderCalDetail(calSelectedDate);
@@ -1155,8 +1044,8 @@ function openPlanModalForDate(dateStr) {
   document.getElementById('planPhone').value = '';
   document.getElementById('planMemo').value = '';
   document.getElementById('planWork').value = '';
-  document.getElementById('planTimeStart').value = '';
-  document.getElementById('planTimeEnd').value = '';
+  const now = new Date();
+  document.getElementById('planTime').value = String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
   document.getElementById('planModal').classList.add('open');
 }
 window.openPlanModalForDate = openPlanModalForDate;
@@ -1199,44 +1088,6 @@ initWorker();
 renderCalendar();
 renderFormPlans();
 
-/* ── 서비스워커 등록 ── */
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch(() => {});
-  });
-}
-
-/* ── iOS 설치 안내 (Safari에서만) ── */
-const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
-const isInStandalone = window.navigator.standalone;
-const isAndroid = /android/i.test(navigator.userAgent);
-const isMobile = isIOS || isAndroid;
-
-if (isMobile && !isInStandalone && !localStorage.getItem('installDismissed')) {
-  const banner = document.createElement('div');
-  banner.id = 'installBanner';
-  banner.style.cssText = `
-    position:fixed;bottom:calc(70px + env(safe-area-inset-bottom));left:12px;right:12px;
-    background:#1A1A1A;color:#fff;border-radius:14px;padding:14px 16px;
-    z-index:500;box-shadow:0 4px 20px rgba(0,0,0,0.3);
-    display:flex;align-items:flex-start;gap:12px;
-  `;
-  const icon = isIOS
-    ? '홈 화면에 추가하려면 하단 공유버튼(□↑) → <b>"홈 화면에 추가"</b> 선택'
-    : '앱으로 설치하려면 브라우저 메뉴 → <b>"홈 화면에 추가"</b> 선택';
-  banner.innerHTML = `
-    <span style="font-size:22px;flex-shrink:0">📲</span>
-    <div style="flex:1">
-      <div style="font-size:13px;font-weight:700;margin-bottom:4px">앱으로 설치하기</div>
-      <div style="font-size:12px;color:rgba(255,255,255,0.75);line-height:1.5">${icon}</div>
-    </div>
-    <button onclick="document.getElementById('installBanner').remove();localStorage.setItem('installDismissed','1')"
-      style="background:none;border:none;color:rgba(255,255,255,0.6);font-size:20px;cursor:pointer;flex-shrink:0;padding:0">✕</button>
-  `;
-  document.body.appendChild(banner);
-  setTimeout(() => { if(banner.parentNode) banner.remove(); }, 8000);
-}
-
 /* ── 공지 알림 (Firebase 실시간 감지) ── */
 let lastNoticeTime = null;
 onSnapshot(doc(db,'settings','notice'), snap => {
@@ -1255,48 +1106,6 @@ onSnapshot(doc(db,'settings','notice'), snap => {
 /* ── 오더 알림 (내 오더 감지) ── */
 let myOrders = [];
 let shownOrderIds = new Set(JSON.parse(localStorage.getItem('shownOrderIds')||'[]'));
-
-function orderCardHTML(o) {
-  return `<div style="background:var(--gray-bg);border-radius:8px;padding:12px;margin-bottom:8px">
-    <div style="font-size:14px;font-weight:700;color:var(--text)">${o.work||'작업 미정'}</div>
-    <div style="font-size:12px;color:var(--text-sub);margin-top:4px">${o.addr}</div>
-    ${o.date?`<div style="font-size:11px;color:var(--text-hint);margin-top:2px">📅 ${o.date}</div>`:''}
-    ${o.phone?`<div style="margin-top:6px"><a href="tel:${o.phone}" style="color:var(--green);font-size:13px;font-weight:600;text-decoration:none">📞 ${o.phone}</a></div>`:''}
-    ${o.memo?`<div style="font-size:12px;color:var(--text-sub);margin-top:4px">📝 ${o.memo}</div>`:''}
-    <button onclick="addOrderToPlan('${o.id}')" style="margin-top:10px;width:100%;background:var(--green);color:#fff;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:700;cursor:pointer">
-      📋 출장 리스트에 추가
-    </button>
-  </div>`;
-}
-
-window.addOrderToPlan = async function(orderId) {
-  const o = myOrders.find(o => o.id === orderId);
-  if (!o) return;
-  // 이미 출장 리스트에 있는지 확인
-  const already = plans.some(p => p.orderId === orderId);
-  if (already) { showToast('이미 출장 리스트에 추가됐습니다'); return; }
-  showSync(true);
-  try {
-    await addDoc(collection(db, 'plans'), {
-      date: o.date || getTodayStr(),
-      addr: o.addr || '',
-      phone: o.phone || '',
-      timeStart: '', timeEnd: '', time: '',
-      work: o.work || '',
-      memo: o.memo || '',
-      worker: fixedWorker,
-      orderId: orderId,
-      done: false,
-      createdAt: serverTimestamp()
-    });
-    // 오더 상태 완료로 변경
-    await updateDoc(doc(db,'orders', orderId), { status: 'done' });
-    document.getElementById('orderAlertModal').classList.remove('open');
-    showToast('✓ 출장 리스트에 추가됐습니다!');
-    switchTab('plan');
-  } catch(e) { showToast('추가 실패: ' + e.message); }
-  showSync(false);
-};
 
 function startOrderListening() {
   if(!fixedWorker) return;
@@ -1317,8 +1126,16 @@ function startOrderListening() {
     // 새 오더 알림 모달
     if(newOrders.length>0){
       const listEl=document.getElementById('orderAlertList');
-      listEl.innerHTML=newOrders.map(o=>orderCardHTML(o)).join('');
+      listEl.innerHTML=newOrders.map(o=>`
+        <div style="background:var(--gray-bg);border-radius:8px;padding:12px;margin-bottom:8px">
+          <div style="font-size:14px;font-weight:700;color:var(--text)">${o.work||'작업 미정'}</div>
+          <div style="font-size:12px;color:var(--text-sub);margin-top:4px">${o.addr}</div>
+          ${o.date?`<div style="font-size:11px;color:var(--text-hint);margin-top:2px">📅 ${o.date}</div>`:''}
+          ${o.phone?`<div style="margin-top:6px"><a href="tel:${o.phone}" style="color:var(--green);font-size:13px;font-weight:600;text-decoration:none">📞 ${o.phone}</a></div>`:''}
+          ${o.memo?`<div style="font-size:12px;color:var(--text-sub);margin-top:4px">📝 ${o.memo}</div>`:''}
+        </div>`).join('');
       document.getElementById('orderAlertModal').classList.add('open');
+      // 확인된 오더 ID 저장
       newOrders.forEach(o=>{
         shownOrderIds.add(o.id);
         updateDoc(doc(db,'orders',o.id),{status:'viewed'}).catch(()=>{});
@@ -1331,9 +1148,15 @@ function startOrderListening() {
 window.showOrderList = function(){
   const activeOrders = myOrders.filter(o=>o.status==='new'||o.status==='viewed');
   const listEl=document.getElementById('orderAlertList');
-  listEl.innerHTML=activeOrders.length
-    ? activeOrders.map(o=>orderCardHTML(o)).join('')
-    : '<div style="text-align:center;color:var(--text-hint);padding:16px">오더가 없습니다</div>';
+  listEl.innerHTML=activeOrders.length?activeOrders.map(o=>`
+    <div style="background:var(--gray-bg);border-radius:8px;padding:12px;margin-bottom:8px">
+      <div style="font-size:14px;font-weight:700;color:var(--text)">${o.work||'작업 미정'}</div>
+      <div style="font-size:12px;color:var(--text-sub);margin-top:4px">${o.addr}</div>
+      ${o.date?`<div style="font-size:11px;color:var(--text-hint);margin-top:2px">📅 ${o.date}</div>`:''}
+      ${o.phone?`<div style="margin-top:6px"><a href="tel:${o.phone}" style="color:var(--green);font-size:13px;font-weight:600;text-decoration:none">📞 ${o.phone}</a></div>`:''}
+      ${o.memo?`<div style="font-size:12px;color:var(--text-sub);margin-top:4px">📝 ${o.memo}</div>`:''}
+    </div>`).join('')
+    :'<div style="text-align:center;color:var(--text-hint);padding:16px">오더가 없습니다</div>';
   document.getElementById('orderAlertModal').classList.add('open');
 };
 
