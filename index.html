@@ -735,6 +735,7 @@ const planQuery = query(collection(db, 'plans'), orderBy('createdAt', 'asc'));
 onSnapshot(planQuery, snap => {
   plans = snap.docs.map(d => ({ id: d.id, ...d.data() }));
   renderPlans();
+  renderFormPlans();
   renderCalendar();
 });
 
@@ -766,10 +767,14 @@ async function savePlan() {
   if (!addr) { showToast('주소를 입력해주세요'); return; }
   showSync(true);
   try {
-    await addDoc(collection(db, 'plans'), {
+    const newDoc = await addDoc(collection(db, 'plans'), {
       date: targetDate, addr, phone, timeStart, timeEnd, work, memo,
       worker: fixedWorker, done: false, createdAt: serverTimestamp()
     });
+    // onSnapshot 대기 없이 즉시 로컬 plans 배열에 추가해서 바로 반영
+    plans = [...plans, { id: newDoc.id, date: targetDate, addr, phone, timeStart, timeEnd, work, memo, worker: fixedWorker, done: false }];
+    renderPlans();
+    renderCalendar();
     closePlanModal();
     showToast('✓ 일정 추가 완료!');
   } catch(e) { showToast('추가 실패: ' + e.message); }
