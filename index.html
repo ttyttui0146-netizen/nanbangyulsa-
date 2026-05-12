@@ -1,0 +1,1371 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="출장기록"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="theme-color" content="#1D9E75"/>
+<meta name="description" content="난방설치·AS·에어컨세척 출장 업무 관리"/>
+<link rel="manifest" href="/manifest.json"/>
+<link rel="apple-touch-icon" href="/icon-192.png"/>
+<link rel="apple-touch-startup-image" href="/icon-512.png"/>
+<title>출장 업무 기록</title>
+<style>
+:root{--green:#1D9E75;--green-dark:#0F6E56;--green-deeper:#085041;--green-bg:#E1F5EE;--green-border:#9FE1CB;--red-bg:#FCEBEB;--red-text:#501313;--gray-bg:#F5F5F3;--border:#E0E0DC;--border-light:#EBEBEA;--text:#1A1A1A;--text-sub:#666660;--text-hint:#999994;--white:#FFFFFF;--radius:12px;--radius-sm:8px}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:var(--gray-bg);font-family:-apple-system,'Noto Sans KR',sans-serif}
+.tab-bar{position:fixed;bottom:0;left:0;right:0;background:var(--white);border-top:1px solid var(--border);display:flex;z-index:100;padding-bottom:env(safe-area-inset-bottom)}
+.tab-item{flex:1;display:flex;flex-direction:column;align-items:center;padding:10px 0 8px;gap:4px;cursor:pointer;color:var(--text-hint);font-size:10px;font-weight:500;transition:color 0.15s}
+.tab-item.active{color:var(--green)}
+.tab-item svg{width:22px;height:22px}
+.page{display:none;flex-direction:column;min-height:100vh;padding-bottom:calc(64px + env(safe-area-inset-bottom))}
+.page.active{display:flex}
+.top-bar{background:var(--white);border-bottom:1px solid var(--border);padding:16px 20px 14px;padding-top:calc(16px + env(safe-area-inset-top));position:sticky;top:0;z-index:50}
+.top-bar-title{font-size:18px;font-weight:700;color:var(--text)}
+.top-bar-sub{font-size:12px;color:var(--text-sub);margin-top:2px}
+.scroll-area{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px}
+.card{background:var(--white);border-radius:var(--radius);border:1px solid var(--border);padding:16px}
+.card-title{font-size:13px;font-weight:600;color:var(--text-sub);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.card-title::before{content:'';width:4px;height:14px;background:var(--green);border-radius:2px;display:block}
+.label{font-size:12px;color:var(--text-sub);margin-bottom:5px;display:block;margin-top:10px}
+.label:first-of-type{margin-top:0}
+.input-field{width:100%;border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;font-size:16px;color:var(--text);background:var(--white);outline:none;font-family:inherit;transition:border-color 0.15s;-webkit-appearance:none}
+.input-field:focus{border-color:var(--green)}
+.textarea{resize:none;height:72px;line-height:1.5}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.chip-group{display:grid;gap:8px}
+.chip-group-2{grid-template-columns:1fr 1fr}
+.chip-group-3{grid-template-columns:1fr 1fr 1fr}
+.chip{border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:13px 8px;font-size:14px;color:var(--text-sub);background:var(--white);cursor:pointer;text-align:center;transition:all 0.15s;user-select:none;font-weight:500;-webkit-appearance:none}
+.chip .chip-icon{font-size:20px;display:block;margin-bottom:5px}
+.chip.active{border-color:var(--green);background:var(--green-bg);color:var(--green-deeper)}
+.chip-sm{padding:11px 6px;font-size:13px}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:4px 0}
+.toggle-label{font-size:15px;color:var(--text);font-weight:500}
+.toggle{position:relative;width:50px;height:28px}
+.toggle input{opacity:0;width:0;height:0}
+.toggle-slider{position:absolute;inset:0;background:var(--border);border-radius:28px;cursor:pointer;transition:0.2s}
+.toggle-slider::before{content:'';position:absolute;height:22px;width:22px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:0.2s;box-shadow:0 1px 4px rgba(0,0,0,0.15)}
+input:checked+.toggle-slider{background:var(--green)}
+input:checked+.toggle-slider::before{transform:translateX(22px)}
+.amount-row{display:flex;align-items:center;gap:8px}
+.amount-row .input-field{flex:1;text-align:right;font-size:18px;font-weight:600}
+.amount-unit{font-size:15px;color:var(--text-sub);font-weight:500;white-space:nowrap}
+.divider{height:1px;background:var(--border-light);margin:12px 0}
+.submit-btn{background:var(--green);color:#fff;border:none;border-radius:var(--radius);padding:16px;font-size:16px;font-weight:700;cursor:pointer;width:100%;box-shadow:0 4px 14px rgba(29,158,117,0.3);-webkit-appearance:none}
+.submit-btn:active{opacity:0.85}
+.record-card{background:var(--white);border-radius:var(--radius);border:1px solid var(--border);overflow:hidden}
+.record-item{padding:14px 16px;display:flex;align-items:flex-start;justify-content:space-between;gap:10px;border-bottom:1px solid var(--border-light)}
+.record-item:last-child{border-bottom:none}
+.record-left{flex:1;min-width:0}
+.record-work{font-size:14px;font-weight:600;color:var(--text)}
+.record-date{font-size:12px;color:var(--text-sub);margin-top:2px}
+.record-addr{font-size:12px;color:var(--text-hint);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.record-right{text-align:right;flex-shrink:0}
+.record-amount{font-size:15px;font-weight:700;color:var(--text)}
+.record-pay{font-size:11px;color:var(--text-sub);margin-top:2px}
+.badge{display:inline-block;font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;margin-top:4px}
+.badge-paid{background:var(--green-bg);color:var(--green-deeper)}
+.badge-unpaid{background:var(--red-bg);color:var(--red-text)}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:14px}
+.stat-label{font-size:11px;color:var(--text-hint);font-weight:500}
+.stat-value{font-size:22px;font-weight:700;color:var(--green);margin-top:4px}
+.stat-sub{font-size:11px;color:var(--text-sub);margin-top:2px}
+.excel-btn{background:var(--white);color:var(--green-dark);border:1.5px solid var(--green);border-radius:var(--radius);padding:14px;font-size:15px;font-weight:600;cursor:pointer;width:100%;display:flex;align-items:center;justify-content:center;gap:8px;-webkit-appearance:none}
+.excel-btn:active{background:var(--green-bg)}
+/* 출장 리스트 */
+.plan-item{background:var(--white);border-radius:var(--radius);border:1px solid var(--border);margin-bottom:10px;overflow:hidden}
+.plan-item.done{border-color:var(--green-border);background:#FAFFFE}
+.plan-item-header{display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer}
+.plan-check{width:24px;height:24px;border-radius:50%;border:2px solid var(--border);background:var(--white);display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;transition:all 0.15s}
+.plan-item.done .plan-check{background:var(--green);border-color:var(--green)}
+.plan-check-icon{display:none}
+.plan-item.done .plan-check-icon{display:block}
+.plan-info{flex:1;min-width:0}
+.plan-name{font-size:14px;font-weight:600;color:var(--text)}
+.plan-item.done .plan-name{color:var(--text-hint);text-decoration:line-through}
+.plan-addr{font-size:12px;color:var(--text-sub);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.plan-time-badge{font-size:12px;font-weight:600;color:var(--green-dark);background:var(--green-bg);padding:3px 9px;border-radius:20px;white-space:nowrap;flex-shrink:0}
+.plan-item.done .plan-time-badge{background:var(--gray-bg);color:var(--text-hint)}
+.plan-detail{padding:0 16px 14px 52px;display:none}
+.plan-detail.open{display:block}
+.plan-detail-row{font-size:13px;color:var(--text-sub);margin-bottom:4px;display:flex;gap:8px}
+.plan-detail-row span:first-child{color:var(--text-hint);min-width:44px}
+.plan-del-btn{background:none;border:none;color:var(--text-hint);font-size:20px;cursor:pointer;padding:0 0 0 8px;line-height:1;flex-shrink:0}
+/* 모달 */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:300;align-items:flex-end;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:var(--white);border-radius:20px 20px 0 0;padding:20px 20px calc(20px + env(safe-area-inset-bottom));width:100%;max-height:90vh;overflow-y:auto}
+.modal-title{font-size:17px;font-weight:700;color:var(--text);margin-bottom:18px;text-align:center}
+.modal-btn-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
+.modal-cancel{background:var(--gray-bg);color:var(--text-sub);border:none;border-radius:var(--radius);padding:14px;font-size:15px;font-weight:600;cursor:pointer;-webkit-appearance:none}
+.modal-save{background:var(--green);color:#fff;border:none;border-radius:var(--radius);padding:14px;font-size:15px;font-weight:600;cursor:pointer;-webkit-appearance:none}
+/* 캘린더 */
+.cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.cal-nav-btn{background:none;border:none;font-size:20px;color:var(--text-sub);cursor:pointer;padding:4px 10px}
+.cal-month{font-size:17px;font-weight:700;color:var(--text)}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:14px}
+.cal-dow{text-align:center;font-size:11px;font-weight:600;color:var(--text-hint);padding:4px 0}
+.cal-day{height:40px;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500;color:var(--text);transition:background 0.12s;padding:0}
+.cal-day.empty{cursor:default}
+.cal-day.today{background:var(--green);color:#fff;font-weight:700}
+.cal-day.selected{background:var(--green-bg);color:var(--green-deeper);font-weight:700}
+.cal-day.sunday{color:#E24B4A}
+.cal-dots{display:flex;gap:2px;margin-top:3px;justify-content:center}
+.cal-dot{width:5px;height:5px;border-radius:50%}
+.cal-dot-plan{background:var(--green)}
+.cal-dot-record{background:#378ADD}
+.cal-day.today .cal-dot{background:rgba(255,255,255,0.8)}
+.cal-detail{background:var(--white);border-radius:var(--radius);border:1px solid var(--border);overflow:hidden}
+.cal-detail-header{padding:14px 16px 10px;border-bottom:1px solid var(--border-light);display:flex;align-items:center;justify-content:space-between}
+.cal-detail-date{font-size:14px;font-weight:700;color:var(--text)}
+.cal-detail-add{background:var(--green);color:#fff;border:none;border-radius:20px;padding:5px 14px;font-size:12px;font-weight:600;cursor:pointer}
+.cal-section-label{font-size:11px;font-weight:600;color:var(--text-hint);padding:10px 16px 6px;text-transform:uppercase;letter-spacing:0.06em}
+.cal-empty-msg{text-align:center;padding:20px;color:var(--text-hint);font-size:13px}
+.cal-plan-row{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--border-light)}
+.cal-plan-row:last-child{border-bottom:none}
+.cal-plan-dot{width:8px;height:8px;border-radius:50%;background:var(--green);flex-shrink:0}
+.cal-plan-info{flex:1;min-width:0}
+.cal-plan-name{font-size:13px;font-weight:600;color:var(--text)}
+.cal-plan-sub{font-size:11px;color:var(--text-sub);margin-top:1px}
+.cal-plan-time{font-size:12px;font-weight:600;color:var(--green-dark);background:var(--green-bg);padding:2px 8px;border-radius:20px;white-space:nowrap}
+.cal-rec-row{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--border-light)}
+.cal-rec-row:last-child{border-bottom:none}
+.cal-rec-dot{width:8px;height:8px;border-radius:50%;background:#378ADD;flex-shrink:0}
+.cal-rec-info{flex:1;min-width:0}
+.cal-rec-work{font-size:13px;font-weight:600;color:var(--text)}
+.cal-rec-sub{font-size:11px;color:var(--text-sub);margin-top:1px}
+.cal-rec-amount{font-size:13px;font-weight:700;color:var(--text);white-space:nowrap}
+.empty{text-align:center;padding:40px 20px;color:var(--text-hint);font-size:14px}
+.empty-icon{font-size:40px;margin-bottom:10px}
+.records-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.records-badge{background:var(--green-bg);color:var(--green-deeper);font-size:11px;padding:3px 8px;border-radius:10px;font-weight:500}
+.toast{position:fixed;bottom:calc(80px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%) translateY(20px);background:#1A1A1A;color:#fff;padding:12px 24px;border-radius:100px;font-size:14px;font-weight:500;opacity:0;transition:all 0.3s;z-index:200;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,0.2)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.syncing{position:fixed;top:calc(10px + env(safe-area-inset-top));right:16px;background:rgba(29,158,117,0.9);color:#fff;font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;z-index:200;display:none}
+.syncing.show{display:block}
+</style>
+</head>
+<body>
+
+<!-- 업무 입력 -->
+<div class="page active" id="page-form">
+  <div class="top-bar">
+    <div class="top-bar-title">출장 업무 기록</div>
+    <div class="top-bar-sub">난방설치·AS &nbsp;|&nbsp; 에어컨세척</div>
+  </div>
+  <div class="scroll-area">
+    <div class="card">
+      <div class="card-title">날짜 및 현장 정보</div>
+      <div class="two-col" style="margin-bottom:12px">
+        <div><label class="label" style="margin-top:0">날짜</label><input class="input-field" type="date" id="workDate"/></div>
+        <div><label class="label" style="margin-top:0">시간</label><input class="input-field" type="time" id="workTime"/></div>
+      </div>
+      <label class="label">주소</label>
+      <input class="input-field" type="text" id="address" placeholder="시/도, 상세 주소 입력" autocomplete="off"/>
+      <label class="label">연락처</label>
+      <input class="input-field" type="tel" id="phone" placeholder="010-0000-0000" oninput="fmtPhone(this)" inputmode="tel"/>
+    </div>
+    <div class="card">
+      <div class="card-title">작업 내용</div>
+      <div class="chip-group chip-group-2" style="margin-bottom:12px">
+        <div class="chip" onclick="selectWork(this,'난방설치 및 AS')"><span class="chip-icon">🔧</span>난방설치 및 AS</div>
+        <div class="chip" onclick="selectWork(this,'에어컨세척')"><span class="chip-icon">❄️</span>에어컨세척</div>
+      </div>
+      <label class="label">세부 메모 (선택)</label>
+      <textarea class="input-field textarea" id="memo" placeholder="특이사항, 부품 교체 내용 등..."></textarea>
+    </div>
+    <div class="card">
+      <div class="card-title">결제</div>
+      <label class="label" style="margin-top:0">결제 구분</label>
+      <div class="chip-group chip-group-3">
+        <div class="chip chip-sm" onclick="selectPay(this,'현금')">💵<br/>현금</div>
+        <div class="chip chip-sm" onclick="selectPay(this,'카드')">💳<br/>카드</div>
+        <div class="chip chip-sm" onclick="selectPay(this,'이체')">🏦<br/>이체</div>
+      </div>
+      <div id="depositorRow" style="display:none;margin-top:10px">
+        <label class="label" style="margin-top:0">입금자명</label>
+        <input class="input-field" id="depositor" placeholder="입금자 이름 입력"/>
+      </div>
+      <label class="label">금액</label>
+      <div class="amount-row">
+        <input class="input-field" type="number" id="amount" placeholder="0" inputmode="numeric"/>
+        <span class="amount-unit">원</span>
+      </div>
+      <div class="divider"></div>
+      <div class="toggle-row">
+        <span class="toggle-label">입금 확인</span>
+        <label class="toggle"><input type="checkbox" id="paid"/><span class="toggle-slider"></span></label>
+      </div>
+    </div>
+    <div class="card" id="workerCard">
+      <div class="card-title">작업자 확인</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 0">
+        <div>
+          <div style="font-size:16px;font-weight:700;color:var(--text)" id="workerDisplay">-</div>
+          <div style="font-size:12px;color:var(--text-hint);margin-top:2px">고정 작업자</div>
+        </div>
+        <button onclick="openWorkerSetting()" style="background:var(--gray-bg);border:none;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;color:var(--text-sub);cursor:pointer">변경</button>
+      </div>
+    </div>
+    <button class="submit-btn" onclick="handleSave()">저장 완료</button>
+
+    <!-- 오늘 출장 리스트 (업무입력 하단) -->
+    <div class="card" id="formPlanCard" style="display:none">
+      <div class="card-title">오늘 출장 일정</div>
+      <div id="formPlanList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- 출장 리스트 -->
+<div class="page" id="page-plan">
+  <div class="top-bar">
+    <div class="top-bar-title">오늘 출장 리스트</div>
+    <div class="top-bar-sub" id="planSubtitle">0건 · 완료 0건</div>
+  </div>
+  <div class="scroll-area" id="planArea">
+    <div class="empty" id="planEmpty"><div class="empty-icon">🗺️</div>오늘 출장 일정을 추가해보세요</div>
+  </div>
+  <div style="position:fixed;bottom:calc(64px + env(safe-area-inset-bottom));right:20px;z-index:90">
+    <button onclick="openPlanModal()" style="width:52px;height:52px;border-radius:50%;background:var(--green);color:#fff;border:none;font-size:24px;cursor:pointer;box-shadow:0 4px 16px rgba(29,158,117,0.35)">+</button>
+  </div>
+</div>
+
+<!-- 캘린더 -->
+<div class="page" id="page-cal">
+  <div class="top-bar">
+    <div class="top-bar-title">캘린더</div>
+    <div class="top-bar-sub">출장 일정 · 업무 기록</div>
+  </div>
+  <div class="scroll-area">
+    <div class="card" style="padding:14px 10px">
+      <div class="cal-nav">
+        <button class="cal-nav-btn" onclick="moveMonth(-1)">‹</button>
+        <div class="cal-month" id="calMonthLabel"></div>
+        <button class="cal-nav-btn" onclick="moveMonth(1)">›</button>
+      </div>
+      <div class="cal-grid" id="calGrid"></div>
+    </div>
+    <div class="cal-detail" id="calDetail" style="display:none"></div>
+  </div>
+</div>
+
+<!-- 기록 보기 -->
+<div class="page" id="page-records">
+  <div class="top-bar">
+    <div class="top-bar-title">저장된 기록</div>
+    <div class="top-bar-sub" id="recordSubtitle">총 0건</div>
+  </div>
+  <div class="scroll-area">
+    <div class="stat-grid" id="statGrid" style="display:none">
+      <div class="stat-card"><div class="stat-label">총 매출</div><div class="stat-value" id="statTotal">0</div><div class="stat-sub">원</div></div>
+      <div class="stat-card"><div class="stat-label">입금 완료</div><div class="stat-value" style="color:var(--text)" id="statPaid">0</div><div class="stat-sub">건 완료</div></div>
+    </div>
+    <div id="recordsList"><div class="empty"><div class="empty-icon">📋</div>저장된 기록이 없습니다</div></div>
+    <button class="excel-btn" onclick="exportExcel()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      엑셀 파일로 내보내기
+    </button>
+  </div>
+</div>
+
+<!-- 탭바 -->
+<div class="tab-bar">
+  <div class="tab-item active" id="tab-form" onclick="switchTab('form')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+    업무 입력
+  </div>
+  <div class="tab-item" id="tab-plan" onclick="switchTab('plan')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+    출장 리스트
+  </div>
+  <div class="tab-item" id="tab-cal" onclick="switchTab('cal')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    캘린더
+  </div>
+  <div class="tab-item" id="tab-records" onclick="switchTab('records')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+    기록 보기
+  </div>
+  <div class="tab-item" id="tab-excel" onclick="exportExcel()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    엑셀 저장
+  </div>
+</div>
+
+<!-- 작업자 설정 모달 -->
+<div class="modal-overlay" id="workerModal">
+  <div class="modal">
+    <div class="modal-title">작업자 이름 설정</div>
+    <input class="input-field" id="workerInput" placeholder="예: 홍길동" style="font-size:18px;text-align:center;font-weight:600"/>
+    <p style="font-size:12px;color:var(--text-hint);text-align:center;margin-top:8px">한 번 설정하면 모든 저장에 자동 적용됩니다</p>
+    <div style="margin-top:16px">
+      <button class="modal-save" style="width:100%" onclick="saveWorkerSetting()">설정 완료</button>
+    </div>
+  </div>
+</div>
+
+<!-- 출장 추가 모달 -->
+<div class="modal-overlay" id="planModal">
+  <div class="modal">
+    <div class="modal-title">출장 일정 추가</div>
+    <label class="label" style="margin-top:0">주소</label>
+    <input class="input-field" id="planAddr" placeholder="시/도, 상세 주소"/>
+    <label class="label">연락처</label>
+    <input class="input-field" type="tel" id="planPhone" placeholder="010-0000-0000" oninput="fmtPhone(this)" inputmode="tel"/>
+    <div class="two-col" style="margin-top:10px">
+      <div>
+        <label class="label" style="margin-top:0">작업 종류</label>
+        <select class="input-field" id="planWork" style="padding:11px 10px">
+          <option value="">선택</option>
+          <option value="난방설치 및 AS">🔧 난방설치 및 AS</option>
+          <option value="에어컨세척">❄️ 에어컨세척</option>
+        </select>
+      </div>
+      <div></div>
+    </div>
+    <label class="label">예정 시간</label>
+    <div style="display:flex;align-items:center;gap:8px">
+      <input class="input-field" type="time" id="planTimeStart" style="flex:1"/>
+      <span style="color:var(--text-hint);font-weight:600;flex-shrink:0">~</span>
+      <input class="input-field" type="time" id="planTimeEnd" style="flex:1"/>
+    </div>
+    <label class="label">메모 (선택)</label>
+    <input class="input-field" id="planMemo" placeholder="특이사항 등..."/>
+    <div class="modal-btn-row">
+      <button class="modal-cancel" onclick="closePlanModal()">취소</button>
+      <button class="modal-save" onclick="savePlan()">추가</button>
+    </div>
+  </div>
+</div>
+
+<!-- 수정 모달 -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal">
+    <div class="modal-title">기록 수정</div>
+    <div class="two-col" style="margin-bottom:12px">
+      <div><label class="label" style="margin-top:0">날짜</label><input class="input-field" type="date" id="editDate"/></div>
+      <div><label class="label" style="margin-top:0">시간</label><input class="input-field" type="time" id="editTime"/></div>
+    </div>
+    <label class="label">주소</label>
+    <input class="input-field" id="editAddr" placeholder="주소"/>
+    <label class="label">연락처</label>
+    <input class="input-field" type="tel" id="editPhone" placeholder="010-0000-0000" oninput="fmtPhone(this)" inputmode="tel"/>
+    <label class="label">작업 내용</label>
+    <div class="chip-group chip-group-2" style="margin-bottom:4px">
+      <div class="chip" id="editW1" onclick="setEditWork(this,'난방설치 및 AS')"><span class="chip-icon">🔧</span>난방설치 및 AS</div>
+      <div class="chip" id="editW2" onclick="setEditWork(this,'에어컨세척')"><span class="chip-icon">❄️</span>에어컨세척</div>
+    </div>
+    <label class="label">메모</label>
+    <textarea class="input-field textarea" id="editMemo"></textarea>
+    <label class="label">결제 구분</label>
+    <div class="chip-group chip-group-3" style="margin-bottom:4px">
+      <div class="chip chip-sm" id="editP1" onclick="setEditPay(this,'현금')">💵<br/>현금</div>
+      <div class="chip chip-sm" id="editP2" onclick="setEditPay(this,'카드')">💳<br/>카드</div>
+      <div class="chip chip-sm" id="editP3" onclick="setEditPay(this,'이체')">🏦<br/>이체</div>
+    </div>
+    <div id="editDepositorRow" style="display:none;margin-top:8px">
+      <label class="label" style="margin-top:0">입금자명</label>
+      <input class="input-field" id="editDepositor" placeholder="입금자 이름 입력"/>
+    </div>
+    <label class="label">금액</label>
+    <div class="amount-row">
+      <input class="input-field" type="number" id="editAmount" inputmode="numeric"/>
+      <span class="amount-unit">원</span>
+    </div>
+    <div class="divider"></div>
+    <div class="toggle-row">
+      <span class="toggle-label">입금 확인</span>
+      <label class="toggle"><input type="checkbox" id="editPaid"/><span class="toggle-slider"></span></label>
+    </div>
+    <div class="modal-btn-row">
+      <button class="modal-cancel" onclick="closeEditModal()">취소</button>
+      <button class="modal-save" onclick="saveEdit()">저장</button>
+    </div>
+    <button onclick="deleteRecord()" style="width:100%;margin-top:10px;background:none;border:1.5px solid #E24B4A;color:#E24B4A;border-radius:var(--radius);padding:12px;font-size:14px;font-weight:600;cursor:pointer">🗑 이 기록 삭제</button>
+  </div>
+</div>
+
+<!-- 출장 일정 수정 모달 -->
+<div class="modal-overlay" id="planEditModal">
+  <div class="modal">
+    <div class="modal-title">출장 일정 수정</div>
+    <label class="label" style="margin-top:0">날짜</label>
+    <input class="input-field" type="date" id="peDate"/>
+    <label class="label">주소</label>
+    <input class="input-field" id="peAddr" placeholder="주소"/>
+    <label class="label">연락처</label>
+    <input class="input-field" type="tel" id="pePhone" placeholder="010-0000-0000" oninput="fmtPhone(this)" inputmode="tel"/>
+    <div class="two-col" style="margin-top:10px">
+      <div>
+        <label class="label" style="margin-top:0">작업 종류</label>
+        <select class="input-field" id="peWork" style="padding:11px 10px">
+          <option value="">선택</option>
+          <option value="난방설치 및 AS">🔧 난방설치 및 AS</option>
+          <option value="에어컨세척">❄️ 에어컨세척</option>
+        </select>
+      </div>
+      <div></div>
+    </div>
+    <label class="label">예정 시간</label>
+    <div style="display:flex;align-items:center;gap:8px">
+      <input class="input-field" type="time" id="peTimeStart" style="flex:1"/>
+      <span style="color:var(--text-hint);font-weight:600;flex-shrink:0">~</span>
+      <input class="input-field" type="time" id="peTimeEnd" style="flex:1"/>
+    </div>
+    <label class="label">메모</label>
+    <input class="input-field" id="peMemo" placeholder="특이사항 등..."/>
+    <div style="margin-top:10px">
+      <button onclick="fillFormFromPlanEdit()" style="background:var(--green-bg);color:var(--green-deeper);border:1px solid var(--green-border);border-radius:8px;padding:10px 14px;font-size:13px;font-weight:600;cursor:pointer;width:100%">✏️ 업무 입력으로 불러오기</button>
+    </div>
+    <div class="modal-btn-row">
+      <button class="modal-cancel" onclick="closePlanEditModal()">취소</button>
+      <button class="modal-save" onclick="savePlanEdit()">저장</button>
+    </div>
+    <button onclick="deletePlanFromEdit()" style="width:100%;margin-top:10px;background:none;border:1.5px solid #E24B4A;color:#E24B4A;border-radius:var(--radius);padding:12px;font-size:14px;font-weight:600;cursor:pointer">🗑 이 일정 삭제</button>
+  </div>
+</div>
+
+<!-- 승인 대기 화면 -->
+<div id="pendingScreen" style="display:none;position:fixed;inset:0;background:var(--gray-bg);z-index:1000;display:none;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;text-align:center">
+  <div style="font-size:60px;margin-bottom:20px">⏳</div>
+  <div style="font-size:20px;font-weight:700;color:var(--text);margin-bottom:10px">승인 대기 중</div>
+  <div style="font-size:14px;color:var(--text-sub);line-height:1.7;margin-bottom:24px">관리자가 계정을 승인하면<br/>앱을 사용할 수 있습니다.<br/>잠시만 기다려주세요.</div>
+  <div style="background:var(--white);border-radius:var(--radius);border:1px solid var(--border);padding:16px 24px;margin-bottom:24px">
+    <div style="font-size:13px;color:var(--text-hint);margin-bottom:4px">신청한 이름</div>
+    <div style="font-size:18px;font-weight:700;color:var(--text)" id="pendingName">-</div>
+  </div>
+  <button onclick="cancelRequest()" style="background:none;border:1.5px solid var(--border);border-radius:var(--radius);padding:12px 24px;font-size:14px;color:var(--text-sub);cursor:pointer">다른 이름으로 다시 신청</button>
+</div>
+
+<!-- 거절 화면 -->
+<div id="rejectedScreen" style="display:none;position:fixed;inset:0;background:var(--gray-bg);z-index:1000;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;text-align:center">
+  <div style="font-size:60px;margin-bottom:20px">❌</div>
+  <div style="font-size:20px;font-weight:700;color:var(--text);margin-bottom:10px">승인이 거절됐습니다</div>
+  <div style="font-size:14px;color:var(--text-sub);line-height:1.7;margin-bottom:24px">관리자에게 문의하거나<br/>다시 신청해주세요.</div>
+  <button onclick="cancelRequest()" style="background:var(--green);color:#fff;border:none;border-radius:var(--radius);padding:13px 32px;font-size:15px;font-weight:700;cursor:pointer">다시 신청하기</button>
+</div>
+
+<div class="toast" id="toast"></div>
+<div class="syncing" id="syncBadge">☁️ 동기화 중...</div>
+
+<!-- 공지 알림 모달 -->
+<div class="modal-overlay" id="noticeAlertModal" style="align-items:center;justify-content:center">
+  <div class="modal" style="border-radius:var(--radius);max-width:340px;margin:20px">
+    <div style="text-align:center;font-size:28px;margin-bottom:8px">📢</div>
+    <div style="font-size:16px;font-weight:700;color:var(--text);text-align:center;margin-bottom:12px">공지사항</div>
+    <div id="noticeAlertText" style="font-size:14px;color:var(--text);line-height:1.6;background:var(--gray-bg);border-radius:8px;padding:14px;margin-bottom:16px"></div>
+    <button onclick="document.getElementById('noticeAlertModal').classList.remove('open')" style="width:100%;background:var(--green);color:#fff;border:none;border-radius:var(--radius);padding:13px;font-size:15px;font-weight:600;cursor:pointer">확인</button>
+  </div>
+</div>
+
+<!-- 오더 알림 모달 -->
+<div class="modal-overlay" id="orderAlertModal">
+  <div class="modal">
+    <div style="text-align:center;font-size:28px;margin-bottom:8px">📋</div>
+    <div style="font-size:16px;font-weight:700;color:var(--text);text-align:center;margin-bottom:14px">새 오더가 있습니다!</div>
+    <div id="orderAlertList"></div>
+    <button onclick="document.getElementById('orderAlertModal').classList.remove('open')" style="width:100%;margin-top:14px;background:var(--green);color:#fff;border:none;border-radius:var(--radius);padding:13px;font-size:15px;font-weight:600;cursor:pointer">확인</button>
+  </div>
+</div>
+
+<!-- 오더 목록 플로팅 버튼 -->
+<div id="orderFloatBtn" style="display:none;position:fixed;bottom:calc(76px + env(safe-area-inset-bottom));left:16px;z-index:90">
+  <button onclick="showOrderList()" style="background:var(--green);color:#fff;border:none;border-radius:20px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 4px 14px rgba(29,158,117,0.4);display:flex;align-items:center;gap:6px">
+    📋 <span id="orderFloatText">오더 1건</span>
+  </button>
+</div>
+
+<!-- Firebase SDK -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.1/firebase-app.js";
+import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc, serverTimestamp, where, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAGvmykxwcwBHP_D1Rg755UBIiJHK43bkg",
+  authDomain: "nanbangyulsa.firebaseapp.com",
+  projectId: "nanbangyulsa",
+  storageBucket: "nanbangyulsa.firebasestorage.app",
+  messagingSenderId: "491847724922",
+  appId: "1:491847724922:web:7b10162265fd54ddfe70c3"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+/* ── 전역 상태 ── */
+let records = [];
+let plans = [];
+let selWork = '', selPay = '';
+let fixedWorker = localStorage.getItem('fixedWorker') || '';
+
+/* ── 유틸 ── */
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+function showSync(v) {
+  document.getElementById('syncBadge').classList.toggle('show', v);
+}
+function getTodayStr() { return new Date().toISOString().slice(0, 10); }
+function fmtPhone(el) {
+  let v = el.value.replace(/\D/g, '');
+  if (v.length > 3 && v.length <= 7) v = v.slice(0,3)+'-'+v.slice(3);
+  else if (v.length > 7) v = v.slice(0,3)+'-'+v.slice(3,7)+'-'+v.slice(7,11);
+  el.value = v;
+}
+window.fmtPhone = fmtPhone;
+
+/* ── 작업자 ── */
+/* ── 작업자 승인 시스템 ── */
+async function initWorker() {
+  if (!fixedWorker) {
+    openWorkerSetting();
+    return;
+  }
+  // Firebase에서 승인 상태 확인
+  await checkApprovalStatus(fixedWorker);
+}
+
+async function checkApprovalStatus(name) {
+  try {
+    const snap = await getDoc(doc(db, 'workerRequests', name));
+    if (!snap.exists()) {
+      // 첫 사용자 - 신청서 제출
+      await submitRequest(name);
+      return;
+    }
+    const status = snap.data().status;
+    if (status === 'approved') {
+      // 승인됨 - 정상 사용
+      document.getElementById('workerDisplay').textContent = fixedWorker;
+      showMainApp();
+    } else if (status === 'pending') {
+      // 대기 중
+      showPendingScreen(name);
+    } else if (status === 'rejected') {
+      // 거절됨
+      showRejectedScreen();
+    }
+  } catch(e) {
+    // 네트워크 오류 시 로컬 승인 상태로 폴백
+    if (localStorage.getItem('approved_'+name) === '1') {
+      document.getElementById('workerDisplay').textContent = fixedWorker;
+      showMainApp();
+    } else {
+      showPendingScreen(name);
+    }
+  }
+}
+
+async function submitRequest(name) {
+  await setDoc(doc(db, 'workerRequests', name), {
+    name, status: 'pending', createdAt: serverTimestamp()
+  });
+  showPendingScreen(name);
+}
+
+function showMainApp() {
+  document.getElementById('pendingScreen').style.display = 'none';
+  document.getElementById('rejectedScreen').style.display = 'none';
+  document.querySelectorAll('.page, .tab-bar').forEach(el => el.style.display = '');
+  // 승인 상태 로컬 캐시
+  localStorage.setItem('approved_'+fixedWorker, '1');
+}
+
+function showPendingScreen(name) {
+  document.getElementById('pendingName').textContent = name;
+  document.getElementById('pendingScreen').style.display = 'flex';
+  document.getElementById('rejectedScreen').style.display = 'none';
+  // 페이지들 숨기기
+  document.querySelectorAll('.page, .tab-bar').forEach(el => el.style.display = 'none');
+  // 승인 실시간 감지
+  const unsub = onSnapshot(doc(db, 'workerRequests', name), snap => {
+    if (!snap.exists()) return;
+    const status = snap.data().status;
+    if (status === 'approved') {
+      unsub();
+      document.getElementById('workerDisplay').textContent = fixedWorker;
+      showMainApp();
+      showToast('✓ 승인됐습니다! 환영합니다 😊');
+    } else if (status === 'rejected') {
+      unsub();
+      showRejectedScreen();
+    }
+  });
+}
+
+function showRejectedScreen() {
+  document.getElementById('pendingScreen').style.display = 'none';
+  document.getElementById('rejectedScreen').style.display = 'flex';
+  document.querySelectorAll('.page, .tab-bar').forEach(el => el.style.display = 'none');
+}
+
+window.cancelRequest = async function() {
+  if (fixedWorker) {
+    try { await updateDoc(doc(db,'workerRequests',fixedWorker),{status:'cancelled'}); } catch(e){}
+  }
+  localStorage.removeItem('fixedWorker');
+  localStorage.removeItem('approved_'+fixedWorker);
+  fixedWorker = '';
+  document.getElementById('pendingScreen').style.display = 'none';
+  document.getElementById('rejectedScreen').style.display = 'none';
+  openWorkerSetting();
+};
+function openWorkerSetting() {
+  document.getElementById('workerInput').value = fixedWorker;
+  document.getElementById('workerModal').classList.add('open');
+}
+async function saveWorkerSetting() {
+  const name = document.getElementById('workerInput').value.trim();
+  if (!name) { showToast('이름을 입력해주세요'); return; }
+  fixedWorker = name;
+  localStorage.setItem('fixedWorker', fixedWorker);
+  document.getElementById('workerDisplay').textContent = fixedWorker;
+  document.getElementById('workerModal').classList.remove('open');
+  showToast('✓ 작업자 설정 완료!');
+  // 승인 상태 확인
+  await checkApprovalStatus(name);
+}
+window.openWorkerSetting = openWorkerSetting;
+window.saveWorkerSetting = saveWorkerSetting;
+
+/* ── 날짜 초기화 ── */
+function initDate() {
+  const now = new Date();
+  document.getElementById('workDate').value = now.toISOString().slice(0,10);
+  document.getElementById('workTime').value = String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
+}
+
+/* ── 탭 ── */
+function switchTab(tab) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-'+tab).classList.add('active');
+  document.getElementById('tab-'+tab).classList.add('active');
+  if (tab === 'records') renderRecords();
+  if (tab === 'plan') renderPlans();
+  if (tab === 'cal') renderCalendar();
+  if (tab === 'form') renderFormPlans();
+}
+window.switchTab = switchTab;
+
+/* ── 폼 ── */
+function selectWork(el, v) {
+  document.querySelectorAll('#page-form .chip-group:first-of-type .chip').forEach(b => b.classList.remove('active'));
+  el.classList.add('active'); selWork = v;
+}
+function selectPay(el, v) {
+  el.closest('.chip-group').querySelectorAll('.chip').forEach(b => b.classList.remove('active'));
+  el.classList.add('active'); selPay = v;
+  document.getElementById('depositorRow').style.display = v === '이체' ? 'block' : 'none';
+  if (v !== '이체') document.getElementById('depositor').value = '';
+}
+window.selectWork = selectWork;
+window.selectPay = selectPay;
+
+async function handleSave() {
+  const date = document.getElementById('workDate').value;
+  const time = document.getElementById('workTime').value;
+  const addr = document.getElementById('address').value.trim();
+  const phone = document.getElementById('phone').value.trim();
+  const memo = document.getElementById('memo').value.trim();
+  const amount = document.getElementById('amount').value;
+  const paid = document.getElementById('paid').checked;
+  if (!date) { showToast('날짜를 입력해주세요'); return; }
+  if (!addr) { showToast('주소를 입력해주세요'); return; }
+  if (!phone) { showToast('연락처를 입력해주세요'); return; }
+  if (!selWork) { showToast('작업 내용을 선택해주세요'); return; }
+  if (!selPay) { showToast('결제 구분을 선택해주세요'); return; }
+  if (!fixedWorker) { openWorkerSetting(); return; }
+
+  showSync(true);
+  try {
+    await addDoc(collection(db, 'records'), {
+      date, time, address: addr, phone, work: selWork, memo,
+      pay: selPay,
+      depositor: selPay === '이체' ? (document.getElementById('depositor').value.trim() || '') : '',
+      amount: amount ? Number(amount) : 0, paid,
+      worker: fixedWorker, createdAt: serverTimestamp()
+    });
+    resetForm();
+    showToast('✓ 저장 완료!');
+  } catch(e) {
+    showToast('저장 실패: ' + e.message);
+  }
+  showSync(false);
+}
+window.handleSave = handleSave;
+
+function resetForm() {
+  ['address','phone','memo','amount','depositor'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('paid').checked = false;
+  document.getElementById('depositorRow').style.display = 'none';
+  document.querySelectorAll('#page-form .chip').forEach(b => b.classList.remove('active'));
+  selWork = ''; selPay = '';
+  initDate();
+}
+
+/* ── 기록 실시간 리스닝 ── */
+const recQuery = query(collection(db, 'records'), orderBy('createdAt', 'desc'));
+onSnapshot(recQuery, snap => {
+  records = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  renderRecords();
+  renderCalendar();
+});
+
+function renderRecords() {
+  const myRecs = records.filter(r => r.worker === fixedWorker);
+  const el = document.getElementById('recordsList');
+  const sg = document.getElementById('statGrid');
+  document.getElementById('recordSubtitle').textContent = '총 ' + myRecs.length + '건';
+  if (!myRecs.length) {
+    el.innerHTML = '<div class="empty"><div class="empty-icon">📋</div>저장된 기록이 없습니다</div>';
+    sg.style.display = 'none'; return;
+  }
+  sg.style.display = 'grid';
+  document.getElementById('statTotal').textContent = myRecs.reduce((s,r)=>s+(r.amount||0),0).toLocaleString();
+  document.getElementById('statPaid').textContent = myRecs.filter(r=>r.paid).length+'/'+myRecs.length;
+  el.innerHTML = '<div class="record-card">'+myRecs.map(r=>`
+    <div class="record-item" style="cursor:pointer" onclick="openEditModal('${r.id}')">
+      <div class="record-left">
+        <div class="record-work">${r.work}</div>
+        <div class="record-date">${r.date}${r.time?' '+r.time:''}</div>
+        <div class="record-addr">${r.address} · ${r.phone}</div>
+        ${r.pay==='이체'&&r.depositor?`<div style="font-size:11px;color:var(--text-sub);margin-top:1px">입금자: ${r.depositor}</div>`:''}
+      </div>
+      <div class="record-right">
+        <div class="record-amount">${r.amount?r.amount.toLocaleString()+'원':'-'}</div>
+        <div class="record-pay">${r.pay}</div>
+        <div class="badge ${r.paid?'badge-paid':'badge-unpaid'}">${r.paid?'입금완료':'미확인'}</div>
+        <div style="font-size:11px;color:var(--text-hint);margin-top:4px">탭하여 수정 ✏️</div>
+      </div>
+    </div>`).join('')+'</div>';
+}
+
+/* ── 기록 수정/삭제 ── */
+let editingId = null;
+let editWork = '', editPay = '';
+
+function openEditModal(id) {
+  const r = records.find(r => r.id === id);
+  if (!r) return;
+  editingId = id;
+  editWork = r.work || '';
+  editPay = r.pay || '';
+  document.getElementById('editDate').value = r.date || '';
+  document.getElementById('editTime').value = r.time || '';
+  document.getElementById('editAddr').value = r.address || '';
+  document.getElementById('editPhone').value = r.phone || '';
+  document.getElementById('editMemo').value = r.memo || '';
+  document.getElementById('editAmount').value = r.amount || '';
+  document.getElementById('editPaid').checked = r.paid || false;
+  // 작업 선택
+  ['editW1','editW2'].forEach(id => document.getElementById(id).classList.remove('active'));
+  if (r.work === '난방설치 및 AS') document.getElementById('editW1').classList.add('active');
+  if (r.work === '에어컨세척') document.getElementById('editW2').classList.add('active');
+  // 결제 선택
+  ['editP1','editP2','editP3'].forEach(id => document.getElementById(id).classList.remove('active'));
+  if (r.pay === '현금') document.getElementById('editP1').classList.add('active');
+  if (r.pay === '카드') document.getElementById('editP2').classList.add('active');
+  if (r.pay === '이체') document.getElementById('editP3').classList.add('active');
+  document.getElementById('editDepositorRow').style.display = r.pay === '이체' ? 'block' : 'none';
+  document.getElementById('editDepositor').value = r.depositor || '';
+  document.getElementById('editModal').classList.add('open');
+}
+function closeEditModal() {
+  document.getElementById('editModal').classList.remove('open');
+  editingId = null;
+}
+function setEditWork(el, v) {
+  ['editW1','editW2'].forEach(id => document.getElementById(id).classList.remove('active'));
+  el.classList.add('active'); editWork = v;
+}
+function setEditPay(el, v) {
+  ['editP1','editP2','editP3'].forEach(id => document.getElementById(id).classList.remove('active'));
+  el.classList.add('active'); editPay = v;
+  document.getElementById('editDepositorRow').style.display = v === '이체' ? 'block' : 'none';
+  if (v !== '이체') document.getElementById('editDepositor').value = '';
+}
+async function saveEdit() {
+  if (!editingId) return;
+  const addr = document.getElementById('editAddr').value.trim();
+  const phone = document.getElementById('editPhone').value.trim();
+  if (!addr) { showToast('주소를 입력해주세요'); return; }
+  if (!editWork) { showToast('작업 내용을 선택해주세요'); return; }
+  if (!editPay) { showToast('결제 구분을 선택해주세요'); return; }
+  showSync(true);
+  try {
+    await updateDoc(doc(db, 'records', editingId), {
+      date: document.getElementById('editDate').value,
+      time: document.getElementById('editTime').value,
+      address: addr, phone,
+      work: editWork,
+      memo: document.getElementById('editMemo').value.trim(),
+      pay: editPay,
+      depositor: editPay === '이체' ? (document.getElementById('editDepositor').value.trim() || '') : '',
+      amount: Number(document.getElementById('editAmount').value) || 0,
+      paid: document.getElementById('editPaid').checked,
+    });
+    closeEditModal();
+    showToast('✓ 수정 완료!');
+  } catch(e) { showToast('수정 실패: ' + e.message); }
+  showSync(false);
+}
+async function deleteRecord() {
+  if (!editingId) return;
+  if (!confirm('이 기록을 삭제할까요?')) return;
+  showSync(true);
+  try {
+    await deleteDoc(doc(db, 'records', editingId));
+    closeEditModal();
+    showToast('✓ 삭제 완료!');
+  } catch(e) { showToast('삭제 실패: ' + e.message); }
+  showSync(false);
+}
+window.openEditModal = openEditModal;
+window.closeEditModal = closeEditModal;
+window.setEditWork = setEditWork;
+window.setEditPay = setEditPay;
+window.saveEdit = saveEdit;
+window.deleteRecord = deleteRecord;
+
+/* ── 출장 리스트 실시간 리스닝 ── */
+const planQuery = query(collection(db, 'plans'), orderBy('createdAt', 'asc'));
+onSnapshot(planQuery, snap => {
+  plans = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  renderPlans();
+  renderCalendar();
+});
+
+function openPlanModal() {
+  document.getElementById('planAddr').value = '';
+  document.getElementById('planPhone').value = '';
+  document.getElementById('planMemo').value = '';
+  document.getElementById('planWork').value = '';
+  document.getElementById('planTimeStart').value = '';
+  document.getElementById('planTimeEnd').value = '';
+  document.getElementById('planModal').classList.add('open');
+}
+function closePlanModal() { document.getElementById('planModal').classList.remove('open'); }
+window.openPlanModal = openPlanModal;
+window.closePlanModal = closePlanModal;
+
+async function savePlan() {
+  const addr = document.getElementById('planAddr').value.trim();
+  const phone = document.getElementById('planPhone').value.trim();
+  const timeStart = document.getElementById('planTimeStart').value;
+  const timeEnd = document.getElementById('planTimeEnd').value;
+  const time = timeStart && timeEnd ? `${timeStart}~${timeEnd}` : (timeStart || timeEnd || '');
+  const work = document.getElementById('planWork').value;
+  const memo = document.getElementById('planMemo').value.trim();
+  const targetDate = document._planTargetDate || getTodayStr();
+  document._planTargetDate = null;
+  if (!addr) { showToast('주소를 입력해주세요'); return; }
+  showSync(true);
+  try {
+    await addDoc(collection(db, 'plans'), {
+      date: targetDate, addr, phone, timeStart, timeEnd, time, work, memo,
+      worker: fixedWorker, done: false, createdAt: serverTimestamp()
+    });
+    closePlanModal();
+    showToast('✓ 일정 추가 완료!');
+  } catch(e) { showToast('추가 실패: ' + e.message); }
+  showSync(false);
+}
+window.savePlan = savePlan;
+
+async function togglePlan(id) {
+  const p = plans.find(p => p.id === id);
+  if (!p) return;
+  await updateDoc(doc(db, 'plans', id), { done: !p.done });
+}
+async function deletePlan(id) {
+  if (!confirm('이 일정을 삭제할까요?')) return;
+  await deleteDoc(doc(db, 'plans', id));
+}
+window.togglePlan = togglePlan;
+window.deletePlan = deletePlan;
+
+function toggleDetail(id) {
+  const el = document.getElementById('pd-'+id);
+  if (el) el.classList.toggle('open');
+}
+window.toggleDetail = toggleDetail;
+
+function renderPlans() {
+  const today = getTodayStr();
+  const todayPlans = plans.filter(p => p.date === today && p.worker === fixedWorker);
+  const done = todayPlans.filter(p => p.done).length;
+  document.getElementById('planSubtitle').textContent = `${todayPlans.length}건 · 완료 ${done}건`;
+  const area = document.getElementById('planArea');
+  area.querySelectorAll('.plan-item').forEach(e => e.remove());
+  document.getElementById('planEmpty').style.display = todayPlans.length ? 'none' : 'block';
+  todayPlans.forEach(p => {
+    const div = document.createElement('div');
+    div.className = 'plan-item' + (p.done ? ' done' : '');
+    div.innerHTML = `
+      <div class="plan-item-header" onclick="openPlanEditModal('${p.id}')">
+        <div class="plan-check" onclick="event.stopPropagation(); togglePlan('${p.id}')">
+          <svg class="plan-check-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div class="plan-info">
+          <div class="plan-name">${p.work?'<span style="font-weight:400;color:var(--text-sub)">'+(p.work==='에어컨세척'?'❄️ 에어컨세척':'🔧 난방설치 및 AS')+'</span>':'작업 미정'}</div>
+          <div class="plan-addr">${p.addr}</div>
+        </div>
+        ${p.time?`<div class="plan-time-badge" style="font-size:11px">${p.time}</div>`:''}
+        ${p.phone?`<a href="tel:${p.phone}" onclick="event.stopPropagation()" style="display:flex;align-items:center;justify-content:center;width:34px;height:34px;background:var(--green-bg);border-radius:50%;flex-shrink:0;text-decoration:none;font-size:16px">📞</a>`:''}
+        <span style="font-size:11px;color:var(--text-hint)">✏️</span>
+      </div>`;
+    area.appendChild(div);
+  });
+  renderFormPlans();
+}
+
+/* ── 업무입력 하단 출장 리스트 ── */
+function renderFormPlans() {
+  const today = getTodayStr();
+  const todayPlans = plans.filter(p => p.date === today && p.worker === fixedWorker);
+  const card = document.getElementById('formPlanCard');
+  const list = document.getElementById('formPlanList');
+  if (!todayPlans.length) { card.style.display = 'none'; return; }
+  card.style.display = 'block';
+  list.innerHTML = todayPlans.map(p => `
+    <div style="display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--border-light)">
+      <div onclick="fillFormFromPlan('${p.id}')" style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;cursor:pointer">
+        <div style="width:8px;height:8px;border-radius:50%;background:${p.done?'#999994':'#1D9E75'};flex-shrink:0"></div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:600;color:${p.done?'var(--text-hint)':'var(--text)'}${p.done?';text-decoration:line-through':''}">${p.work||'작업 미정'}</div>
+          <div style="font-size:11px;color:var(--text-sub);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.addr}</div>
+        </div>
+        ${p.time?`<div style="font-size:11px;font-weight:600;color:var(--green-dark);background:var(--green-bg);padding:2px 7px;border-radius:20px;white-space:nowrap;flex-shrink:0">${p.time}</div>`:''}
+      </div>
+      ${p.phone?`<a href="tel:${p.phone}" style="display:flex;align-items:center;justify-content:center;width:36px;height:36px;background:var(--green-bg);border-radius:50%;flex-shrink:0;text-decoration:none;font-size:16px">📞</a>`:'<div style="font-size:11px;color:var(--text-hint)">탭→입력</div>'}
+    </div>`).join('');
+}
+
+/* ── 출장 일정 수정 모달 ── */
+let editingPlanId = null;
+
+function openPlanEditModal(id) {
+  const p = plans.find(p => p.id === id);
+  if (!p) return;
+  editingPlanId = id;
+  document.getElementById('peDate').value = p.date || getTodayStr();
+  document.getElementById('peAddr').value = p.addr || '';
+  document.getElementById('pePhone').value = p.phone || '';
+  // 기존 time 필드 하위 호환 처리
+  if (p.timeStart) {
+    document.getElementById('peTimeStart').value = p.timeStart;
+    document.getElementById('peTimeEnd').value = p.timeEnd || '';
+  } else if (p.time && p.time.includes('~')) {
+    const parts = p.time.split('~');
+    document.getElementById('peTimeStart').value = parts[0] || '';
+    document.getElementById('peTimeEnd').value = parts[1] || '';
+  } else {
+    document.getElementById('peTimeStart').value = p.time || '';
+    document.getElementById('peTimeEnd').value = '';
+  }
+  document.getElementById('peWork').value = p.work || '';
+  document.getElementById('peMemo').value = p.memo || '';
+  document.getElementById('planEditModal').classList.add('open');
+}
+function closePlanEditModal() {
+  document.getElementById('planEditModal').classList.remove('open');
+  editingPlanId = null;
+}
+async function savePlanEdit() {
+  if (!editingPlanId) return;
+  const addr = document.getElementById('peAddr').value.trim();
+  if (!addr) { showToast('주소를 입력해주세요'); return; }
+  const timeStart = document.getElementById('peTimeStart').value;
+  const timeEnd = document.getElementById('peTimeEnd').value;
+  const time = timeStart && timeEnd ? `${timeStart}~${timeEnd}` : (timeStart || timeEnd || '');
+  showSync(true);
+  try {
+    await updateDoc(doc(db, 'plans', editingPlanId), {
+      date: document.getElementById('peDate').value,
+      addr,
+      phone: document.getElementById('pePhone').value.trim(),
+      timeStart, timeEnd, time,
+      work: document.getElementById('peWork').value,
+      memo: document.getElementById('peMemo').value.trim(),
+    });
+    closePlanEditModal();
+    showToast('✓ 수정 완료!');
+  } catch(e) { showToast('수정 실패: ' + e.message); }
+  showSync(false);
+}
+async function deletePlanFromEdit() {
+  if (!editingPlanId) return;
+  if (!confirm('이 일정을 삭제할까요?')) return;
+  showSync(true);
+  try {
+    await deleteDoc(doc(db, 'plans', editingPlanId));
+    closePlanEditModal();
+    showToast('✓ 삭제 완료!');
+  } catch(e) { showToast('삭제 실패: ' + e.message); }
+  showSync(false);
+}
+function fillFormFromPlanEdit() {
+  const p = plans.find(p => p.id === editingPlanId);
+  if (!p) return;
+  closePlanEditModal();
+  fillFormFromPlan(p.id);
+}
+window.openPlanEditModal = openPlanEditModal;
+window.closePlanEditModal = closePlanEditModal;
+window.savePlanEdit = savePlanEdit;
+window.deletePlanFromEdit = deletePlanFromEdit;
+window.fillFormFromPlanEdit = fillFormFromPlanEdit;
+
+function fillFormFromPlan(id) {
+  const p = plans.find(p => p.id === id);
+  if (!p) return;
+  switchTab('form');
+  document.getElementById('address').value = p.addr;
+  document.getElementById('phone').value = p.phone || '';
+  document.getElementById('workDate').value = p.date;
+  if (p.time) document.getElementById('workTime').value = p.time;
+  if (p.work) {
+    document.querySelectorAll('#page-form .chip-group:first-of-type .chip').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('#page-form .chip-group:first-of-type .chip').forEach(b => {
+      if (b.textContent.trim().includes(p.work === '에어컨세척' ? '에어컨세척' : '난방설치')) {
+        b.classList.add('active'); selWork = p.work;
+      }
+    });
+  }
+  showToast('✓ 정보를 불러왔습니다');
+}
+window.fillFormFromPlan = fillFormFromPlan;
+
+/* ── 캘린더 ── */
+let calYear = new Date().getFullYear();
+let calMonth = new Date().getMonth();
+let calSelectedDate = getTodayStr();
+
+function moveMonth(dir) {
+  calMonth += dir;
+  if (calMonth > 11) { calMonth = 0; calYear++; }
+  if (calMonth < 0) { calMonth = 11; calYear--; }
+  renderCalendar();
+}
+window.moveMonth = moveMonth;
+
+function renderCalendar() {
+  const todayStr = getTodayStr();
+  document.getElementById('calMonthLabel').textContent = `${calYear}년 ${calMonth+1}월`;
+  const grid = document.getElementById('calGrid');
+  grid.innerHTML = '';
+  ['일','월','화','수','목','금','토'].forEach((d,i) => {
+    const el = document.createElement('div');
+    el.className = 'cal-dow';
+    el.style.color = i === 0 ? '#E24B4A' : '';
+    el.textContent = d; grid.appendChild(el);
+  });
+  const firstDay = new Date(calYear, calMonth, 1).getDay();
+  const daysInMonth = new Date(calYear, calMonth+1, 0).getDate();
+  for (let i = 0; i < firstDay; i++) { const el = document.createElement('div'); el.className='cal-day empty'; grid.appendChild(el); }
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateStr = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const dow = (firstDay+d-1)%7;
+    const hasPlans = plans.some(p => p.date === dateStr && p.worker === fixedWorker);
+    const hasRecs  = records.some(r => r.date === dateStr && r.worker === fixedWorker);
+    const isToday = dateStr === todayStr;
+    const isSel = dateStr === calSelectedDate;
+    const el = document.createElement('div');
+    let cls = 'cal-day';
+    if (isToday) cls += ' today';
+    else if (isSel) cls += ' selected';
+    else if (dow === 0) cls += ' sunday';
+    el.className = cls;
+    el.onclick = () => { calSelectedDate = dateStr; renderCalendar(); };
+    el.innerHTML = `<span>${d}</span>`;
+    if (hasPlans || hasRecs) {
+      const dots = document.createElement('div'); dots.className = 'cal-dots';
+      if (hasPlans) { const dot = document.createElement('div'); dot.className='cal-dot cal-dot-plan'; dots.appendChild(dot); }
+      if (hasRecs)  { const dot = document.createElement('div'); dot.className='cal-dot cal-dot-record'; dots.appendChild(dot); }
+      el.appendChild(dots);
+    }
+    grid.appendChild(el);
+  }
+  renderCalDetail(calSelectedDate);
+}
+
+function renderCalDetail(dateStr) {
+  const detail = document.getElementById('calDetail');
+  const dayPlans = plans.filter(p => p.date === dateStr && p.worker === fixedWorker);
+  const dayRecs  = records.filter(r => r.date === dateStr && r.worker === fixedWorker);
+  const [y,m,d] = dateStr.split('-');
+  const dow = ['일','월','화','수','목','금','토'][new Date(dateStr).getDay()];
+  const dateLabel = `${Number(m)}월 ${Number(d)}일 (${dow})`;
+  detail.style.display = 'block';
+  let html = `<div class="cal-detail-header"><div class="cal-detail-date">${dateLabel}</div><button class="cal-detail-add" onclick="openPlanModalForDate('${dateStr}')">+ 일정 추가</button></div>`;
+  if (!dayPlans.length && !dayRecs.length) {
+    html += '<div class="cal-empty-msg">이 날의 일정이 없습니다</div>';
+  } else {
+    if (dayPlans.length) {
+      html += `<div class="cal-section-label">🗓 출장 일정 (${dayPlans.length}건)</div>`;
+      dayPlans.forEach(p => {
+        html += `<div class="cal-plan-row" style="cursor:pointer">
+          <div class="cal-plan-dot"></div>
+          <div class="cal-plan-info" onclick="openPlanEditModal('${p.id}')">
+            <div class="cal-plan-name">${p.work||'작업 미정'}${p.done?' <span style="color:var(--text-hint);font-size:11px">완료</span>':''}</div>
+            <div class="cal-plan-sub">${p.addr}</div>
+          </div>
+          ${p.time?`<div class="cal-plan-time">${p.time}</div>`:''}
+          ${p.phone?`<a href="tel:${p.phone}" style="display:flex;align-items:center;justify-content:center;width:34px;height:34px;background:var(--green-bg);border-radius:50%;flex-shrink:0;text-decoration:none;font-size:15px">📞</a>`:''}
+          <span onclick="openPlanEditModal('${p.id}')" style="font-size:11px;color:var(--text-hint)">✏️</span>
+        </div>`;
+      });
+    }
+    if (dayRecs.length) {
+      const total = dayRecs.reduce((s,r)=>s+(r.amount||0),0);
+      html += `<div class="cal-section-label">📋 업무 기록 (${dayRecs.length}건 · ${total.toLocaleString()}원)</div>`;
+      dayRecs.forEach(r => {
+        html += `<div class="cal-rec-row" style="cursor:pointer">
+          <div class="cal-rec-dot"></div>
+          <div class="cal-rec-info" onclick="openEditModal('${r.id}')">
+            <div class="cal-rec-work">${r.work}</div>
+            <div class="cal-rec-sub">${r.address}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+            <div style="text-align:right" onclick="openEditModal('${r.id}')">
+              <div class="cal-rec-amount">${r.amount?r.amount.toLocaleString()+'원':'-'}</div>
+              <span style="font-size:10px;color:var(--text-hint)">✏️ 수정</span>
+            </div>
+            ${r.phone?`<a href="tel:${r.phone}" style="display:flex;align-items:center;justify-content:center;width:34px;height:34px;background:var(--green-bg);border-radius:50%;text-decoration:none;font-size:15px">📞</a>`:''}
+          </div>
+        </div>`;
+      });
+    }
+  }
+  detail.innerHTML = html;
+}
+
+function openPlanModalForDate(dateStr) {
+  document._planTargetDate = dateStr;
+  document.getElementById('planAddr').value = '';
+  document.getElementById('planPhone').value = '';
+  document.getElementById('planMemo').value = '';
+  document.getElementById('planWork').value = '';
+  document.getElementById('planTimeStart').value = '';
+  document.getElementById('planTimeEnd').value = '';
+  document.getElementById('planModal').classList.add('open');
+}
+window.openPlanModalForDate = openPlanModalForDate;
+
+/* ── 엑셀 ── */
+function downloadBlob(blob, fname) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = fname;
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(url); document.body.removeChild(a); }, 1500);
+}
+function exportExcel() {
+  const myRecs = records.filter(r => r.worker === fixedWorker);
+  if (!myRecs.length) { showToast('저장된 기록이 없습니다'); return; }
+  const today = new Date();
+  const dateStr = `${today.getFullYear()}${String(today.getMonth()+1).padStart(2,'0')}${String(today.getDate()).padStart(2,'0')}`;
+  const rows = myRecs.map((r,i) => ({'No':myRecs.length-i,'날짜':r.date,'시간':r.time||'','주소':r.address,'연락처':r.phone,'작업내용':r.work,'세부메모':r.memo||'','결제구분':r.pay,'금액(원)':r.amount||0,'입금확인':r.paid?'완료':'미확인','작업자':r.worker}));
+  if (typeof XLSX !== 'undefined') {
+    try {
+      const ws = XLSX.utils.json_to_sheet(rows);
+      ws['!cols'] = [{wch:5},{wch:12},{wch:8},{wch:28},{wch:15},{wch:14},{wch:24},{wch:10},{wch:12},{wch:10},{wch:10}];
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb,'업무기록',ws);
+      const out = XLSX.write(wb,{bookType:'xlsx',type:'array'});
+      downloadBlob(new Blob([out],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}),`출장업무기록_${dateStr}.xlsx`);
+      showToast('✓ 엑셀 저장 완료!'); return;
+    } catch(e) {}
+  }
+  const h = ['No','날짜','시간','주소','연락처','작업내용','세부메모','결제구분','금액(원)','입금확인','작업자'];
+  const csv = [h.join(',')].concat(rows.map(r=>h.map(k=>`"${String(r[k]??'').replace(/"/g,'""')}"`).join(','))).join('\n');
+  downloadBlob(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'}),`출장업무기록_${dateStr}.csv`);
+  showToast('✓ CSV 저장 완료!');
+}
+window.exportExcel = exportExcel;
+
+/* ── 초기화 ── */
+initDate();
+initWorker();
+renderCalendar();
+renderFormPlans();
+
+/* ── 서비스워커 등록 ── */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  });
+}
+
+/* ── iOS 설치 안내 (Safari에서만) ── */
+const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+const isInStandalone = window.navigator.standalone;
+const isAndroid = /android/i.test(navigator.userAgent);
+const isMobile = isIOS || isAndroid;
+
+if (isMobile && !isInStandalone && !localStorage.getItem('installDismissed')) {
+  const banner = document.createElement('div');
+  banner.id = 'installBanner';
+  banner.style.cssText = `
+    position:fixed;bottom:calc(70px + env(safe-area-inset-bottom));left:12px;right:12px;
+    background:#1A1A1A;color:#fff;border-radius:14px;padding:14px 16px;
+    z-index:500;box-shadow:0 4px 20px rgba(0,0,0,0.3);
+    display:flex;align-items:flex-start;gap:12px;
+  `;
+  const icon = isIOS
+    ? '홈 화면에 추가하려면 하단 공유버튼(□↑) → <b>"홈 화면에 추가"</b> 선택'
+    : '앱으로 설치하려면 브라우저 메뉴 → <b>"홈 화면에 추가"</b> 선택';
+  banner.innerHTML = `
+    <span style="font-size:22px;flex-shrink:0">📲</span>
+    <div style="flex:1">
+      <div style="font-size:13px;font-weight:700;margin-bottom:4px">앱으로 설치하기</div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.75);line-height:1.5">${icon}</div>
+    </div>
+    <button onclick="document.getElementById('installBanner').remove();localStorage.setItem('installDismissed','1')"
+      style="background:none;border:none;color:rgba(255,255,255,0.6);font-size:20px;cursor:pointer;flex-shrink:0;padding:0">✕</button>
+  `;
+  document.body.appendChild(banner);
+  setTimeout(() => { if(banner.parentNode) banner.remove(); }, 8000);
+}
+
+/* ── 공지 알림 (Firebase 실시간 감지) ── */
+let lastNoticeTime = null;
+onSnapshot(doc(db,'settings','notice'), snap => {
+  if(!snap.exists()) return;
+  const data = snap.data();
+  const updatedAt = data.updatedAt;
+  if(!updatedAt) return;
+  // 처음 로드가 아닌 변경 시에만 알림
+  if(lastNoticeTime !== null && updatedAt.seconds !== lastNoticeTime) {
+    document.getElementById('noticeAlertText').textContent = data.text || '';
+    document.getElementById('noticeAlertModal').classList.add('open');
+  }
+  lastNoticeTime = updatedAt.seconds;
+});
+
+/* ── 오더 알림 (내 오더 감지) ── */
+let myOrders = [];
+let shownOrderIds = new Set(JSON.parse(localStorage.getItem('shownOrderIds')||'[]'));
+
+function orderCardHTML(o) {
+  return `<div style="background:var(--gray-bg);border-radius:8px;padding:12px;margin-bottom:8px">
+    <div style="font-size:14px;font-weight:700;color:var(--text)">${o.work||'작업 미정'}</div>
+    <div style="font-size:12px;color:var(--text-sub);margin-top:4px">${o.addr}</div>
+    ${o.date?`<div style="font-size:11px;color:var(--text-hint);margin-top:2px">📅 ${o.date}</div>`:''}
+    ${o.phone?`<div style="margin-top:6px"><a href="tel:${o.phone}" style="color:var(--green);font-size:13px;font-weight:600;text-decoration:none">📞 ${o.phone}</a></div>`:''}
+    ${o.memo?`<div style="font-size:12px;color:var(--text-sub);margin-top:4px">📝 ${o.memo}</div>`:''}
+    <button onclick="addOrderToPlan('${o.id}')" style="margin-top:10px;width:100%;background:var(--green);color:#fff;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:700;cursor:pointer">
+      📋 출장 리스트에 추가
+    </button>
+  </div>`;
+}
+
+window.addOrderToPlan = async function(orderId) {
+  const o = myOrders.find(o => o.id === orderId);
+  if (!o) return;
+  // 이미 출장 리스트에 있는지 확인
+  const already = plans.some(p => p.orderId === orderId);
+  if (already) { showToast('이미 출장 리스트에 추가됐습니다'); return; }
+  showSync(true);
+  try {
+    await addDoc(collection(db, 'plans'), {
+      date: o.date || getTodayStr(),
+      addr: o.addr || '',
+      phone: o.phone || '',
+      timeStart: '', timeEnd: '', time: '',
+      work: o.work || '',
+      memo: o.memo || '',
+      worker: fixedWorker,
+      orderId: orderId,
+      done: false,
+      createdAt: serverTimestamp()
+    });
+    // 오더 상태 완료로 변경
+    await updateDoc(doc(db,'orders', orderId), { status: 'done' });
+    document.getElementById('orderAlertModal').classList.remove('open');
+    showToast('✓ 출장 리스트에 추가됐습니다!');
+    switchTab('plan');
+  } catch(e) { showToast('추가 실패: ' + e.message); }
+  showSync(false);
+};
+
+function startOrderListening() {
+  if(!fixedWorker) return;
+  onSnapshot(query(collection(db,'orders'), where('assignedTo','==',fixedWorker)), snap => {
+    myOrders = snap.docs.map(d=>({id:d.id,...d.data()}));
+    const newOrders = myOrders.filter(o=>o.status==='new'&&!shownOrderIds.has(o.id));
+    const activeOrders = myOrders.filter(o=>o.status==='new'||o.status==='viewed');
+
+    // 플로팅 버튼
+    const floatBtn = document.getElementById('orderFloatBtn');
+    if(activeOrders.length>0){
+      floatBtn.style.display='block';
+      document.getElementById('orderFloatText').textContent=`오더 ${activeOrders.length}건`;
+    } else {
+      floatBtn.style.display='none';
+    }
+
+    // 새 오더 알림 모달
+    if(newOrders.length>0){
+      const listEl=document.getElementById('orderAlertList');
+      listEl.innerHTML=newOrders.map(o=>orderCardHTML(o)).join('');
+      document.getElementById('orderAlertModal').classList.add('open');
+      newOrders.forEach(o=>{
+        shownOrderIds.add(o.id);
+        updateDoc(doc(db,'orders',o.id),{status:'viewed'}).catch(()=>{});
+      });
+      localStorage.setItem('shownOrderIds', JSON.stringify([...shownOrderIds]));
+    }
+  });
+}
+
+window.showOrderList = function(){
+  const activeOrders = myOrders.filter(o=>o.status==='new'||o.status==='viewed');
+  const listEl=document.getElementById('orderAlertList');
+  listEl.innerHTML=activeOrders.length
+    ? activeOrders.map(o=>orderCardHTML(o)).join('')
+    : '<div style="text-align:center;color:var(--text-hint);padding:16px">오더가 없습니다</div>';
+  document.getElementById('orderAlertModal').classList.add('open');
+};
+
+/* ── 위치 공유 ── */
+function startLocationSharing() {
+  if(!navigator.geolocation || !fixedWorker) return;
+  const sendLoc = () => {
+    navigator.geolocation.getCurrentPosition(pos => {
+      setDoc(doc(db,'locations',fixedWorker), {
+        lat: pos.coords.latitude,
+        lng: pos.coords.longitude,
+        worker: fixedWorker,
+        timestamp: serverTimestamp()
+      }).catch(()=>{});
+    }, ()=>{});
+  };
+  sendLoc();
+  setInterval(sendLoc, 60000); // 1분마다 갱신
+}
+
+// 작업자 설정 완료 후 위치/오더 시작
+const _origSaveWorker = window.saveWorkerSetting;
+window.saveWorkerSetting = function(){
+  _origSaveWorker();
+  setTimeout(()=>{ startOrderListening(); startLocationSharing(); }, 500);
+};
+
+// 이미 작업자 설정된 경우 즉시 시작
+if(fixedWorker){
+  setTimeout(()=>{ startOrderListening(); startLocationSharing(); }, 1000);
+}
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</body>
+</html>

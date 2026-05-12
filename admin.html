@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-title" content="관리자"/>
+<title>관리자 모드</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<style>
+:root{--green:#1D9E75;--green-dark:#0F6E56;--green-deeper:#085041;--green-bg:#E1F5EE;--green-border:#9FE1CB;--red-bg:#FCEBEB;--red-text:#501313;--gray-bg:#F5F5F3;--border:#E0E0DC;--border-light:#EBEBEA;--text:#1A1A1A;--text-sub:#666660;--text-hint:#999994;--white:#FFFFFF;--radius:12px;--radius-sm:8px;--blue:#378ADD;--blue-bg:#E6F1FB;--amber:#D97706;--amber-bg:#FEF3C7}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;font-family:-apple-system,'Noto Sans KR',sans-serif}
+#loginScreen{min-height:100vh;background:var(--gray-bg);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px}
+.login-logo{width:64px;height:64px;background:var(--green);border-radius:18px;display:flex;align-items:center;justify-content:center;margin-bottom:20px;box-shadow:0 8px 24px rgba(29,158,117,0.3)}
+.login-title{font-size:22px;font-weight:700;color:var(--text);margin-bottom:6px;text-align:center}
+.login-sub{font-size:14px;color:var(--text-hint);margin-bottom:32px;text-align:center}
+.login-card{background:var(--white);border-radius:var(--radius);border:1px solid var(--border);padding:24px;width:100%;max-width:360px}
+.fl{font-size:12px;font-weight:600;color:var(--text-sub);margin-bottom:6px;display:block;margin-top:12px}
+.fl:first-child{margin-top:0}
+.fi{width:100%;border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:13px 14px;font-size:16px;color:var(--text);background:var(--white);outline:none;-webkit-appearance:none;font-family:inherit;transition:border-color 0.15s}
+.fi:focus{border-color:var(--green)}
+.login-btn{width:100%;background:var(--green);color:#fff;border:none;margin-top:16px;border-radius:var(--radius);padding:14px;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 4px 14px rgba(29,158,117,0.3)}
+.login-btn:active{opacity:0.85}
+.login-err{font-size:13px;color:#E24B4A;text-align:center;margin-top:10px;display:none}
+#adminApp{display:none;background:var(--gray-bg);min-height:100vh}
+.tab-bar{position:fixed;bottom:0;left:0;right:0;z-index:100;background:var(--white);border-top:1px solid var(--border);display:flex;padding-bottom:env(safe-area-inset-bottom)}
+.tab-item{flex:1;display:flex;flex-direction:column;align-items:center;padding:10px 0 8px;gap:3px;cursor:pointer;color:var(--text-hint);font-size:9px;font-weight:500;transition:color 0.15s;position:relative}
+.tab-item.active{color:var(--green)}
+.tab-item svg{width:20px;height:20px}
+.tab-badge{position:absolute;top:6px;right:calc(50% - 14px);background:#E24B4A;color:#fff;font-size:9px;font-weight:700;width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+.page{display:none;flex-direction:column;min-height:100vh;padding-bottom:calc(64px + env(safe-area-inset-bottom));background:var(--gray-bg)}
+.page.active{display:flex}
+.top-bar{background:var(--white);border-bottom:1px solid var(--border);padding:14px 16px 12px;padding-top:calc(14px + env(safe-area-inset-top));position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:space-between}
+.top-bar-title{font-size:17px;font-weight:700;color:var(--text)}
+.top-bar-sub{font-size:11px;color:var(--text-sub);margin-top:2px}
+.icon-btn{background:var(--gray-bg);border:none;border-radius:8px;padding:7px 10px;font-size:16px;cursor:pointer}
+.logout-btn{background:var(--gray-bg);border:none;border-radius:8px;padding:7px 12px;font-size:12px;font-weight:600;color:var(--text-sub);cursor:pointer}
+.scroll-area{flex:1;padding:14px;display:flex;flex-direction:column;gap:10px}
+.card{background:var(--white);border-radius:var(--radius);border:1px solid var(--border);padding:14px}
+.card-title{font-size:13px;font-weight:600;color:var(--text-sub);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.card-title::before{content:'';width:4px;height:14px;background:var(--green);border-radius:2px;display:block}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:14px}
+.stat-label{font-size:11px;color:var(--text-hint);font-weight:500}
+.stat-value{font-size:20px;font-weight:700;color:var(--text);margin-top:4px}
+.stat-sub{font-size:11px;color:var(--text-sub);margin-top:2px}
+.cg{color:var(--green)}.cr{color:#E24B4A}
+.worker-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;display:flex;align-items:center;gap:12px;margin-bottom:8px;cursor:pointer}
+.worker-card.expanded{border-color:var(--green)}
+.w-av{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;flex-shrink:0}
+.w-info{flex:1;min-width:0}
+.w-name{font-size:14px;font-weight:700;color:var(--text)}
+.w-meta{font-size:11px;color:var(--text-sub);margin-top:2px}
+.w-badge{display:inline-block;font-size:10px;font-weight:600;padding:2px 7px;border-radius:20px;margin-top:3px}
+.w-stats{text-align:right;flex-shrink:0}
+.w-amt{font-size:13px;font-weight:700;color:var(--green)}
+.w-cnt{font-size:11px;color:var(--text-hint);margin-top:2px}
+.worker-plans{display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--border-light)}
+.worker-plans.open{display:block}
+.rec-list{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.rec-item{padding:12px 14px;border-bottom:1px solid var(--border-light);cursor:pointer}
+.rec-item:last-child{border-bottom:none}
+.rec-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.rec-left{flex:1;min-width:0}
+.w-tag{display:inline-block;font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;margin-bottom:3px}
+.rec-work{font-size:13px;font-weight:600;color:var(--text)}
+.rec-date{font-size:11px;color:var(--text-sub);margin-top:2px}
+.rec-addr{font-size:11px;color:var(--text-hint);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rec-right{text-align:right;flex-shrink:0}
+.rec-amt{font-size:13px;font-weight:700;color:var(--text)}
+.rec-pay{font-size:11px;color:var(--text-sub);margin-top:2px}
+.paid-y{display:inline-block;font-size:10px;font-weight:600;padding:2px 7px;border-radius:20px;margin-top:3px;background:var(--green-bg);color:var(--green-deeper)}
+.paid-n{display:inline-block;font-size:10px;font-weight:600;padding:2px 7px;border-radius:20px;margin-top:3px;background:var(--red-bg);color:var(--red-text)}
+.rec-detail{display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--border-light)}
+.rec-detail.open{display:block}
+.rec-detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.rec-detail-box{background:var(--gray-bg);border-radius:8px;padding:10px}
+.rec-detail-label{font-size:10px;color:var(--text-hint);margin-bottom:3px}
+.rec-detail-val{font-size:13px;font-weight:600;color:var(--text)}
+.rec-memo{margin-top:6px;background:var(--gray-bg);border-radius:8px;padding:10px}
+.plan-item-row{padding:11px 14px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border-light);cursor:pointer}
+.plan-item-row:last-child{border-bottom:none}
+.plan-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.plan-info{flex:1;min-width:0}
+.plan-work{font-size:13px;font-weight:600;color:var(--text)}
+.plan-addr{font-size:11px;color:var(--text-sub);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.plan-time{font-size:11px;font-weight:600;color:var(--green-dark);background:var(--green-bg);padding:2px 7px;border-radius:20px;white-space:nowrap;flex-shrink:0}
+.plan-detail-box{background:var(--gray-bg);border-radius:8px;padding:10px;margin-top:8px;display:none}
+.plan-detail-box.open{display:block}
+.plan-detail-row{font-size:12px;color:var(--text-sub);margin-bottom:4px;display:flex;gap:8px}
+.plan-detail-row b{color:var(--text-hint);min-width:44px;font-weight:500}
+#locationMap{height:220px;width:100%}
+.order-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:8px}
+.order-card.status-new{border-left:3px solid #E24B4A}
+.order-card.status-viewed{border-left:3px solid var(--amber)}
+.order-card.status-done{border-left:3px solid var(--green)}
+.order-work{font-size:14px;font-weight:700;color:var(--text)}
+.order-addr{font-size:12px;color:var(--text-sub);margin-top:3px}
+.order-meta{font-size:11px;color:var(--text-hint);margin-top:3px}
+.order-badge{font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;white-space:nowrap}
+.badge-new{background:var(--red-bg);color:var(--red-text)}
+.badge-viewed{background:var(--amber-bg);color:var(--amber)}
+.badge-done{background:var(--green-bg);color:var(--green-deeper)}
+.order-footer{display:flex;gap:8px;margin-top:10px}
+.order-btn{flex:1;border:none;border-radius:8px;padding:8px;font-size:12px;font-weight:600;cursor:pointer}
+.order-btn-del{background:var(--red-bg);color:var(--red-text)}
+.order-btn-done{background:var(--green-bg);color:var(--green-deeper)}
+.fab{position:fixed;bottom:calc(76px + env(safe-area-inset-bottom));right:18px;width:52px;height:52px;border-radius:50%;background:var(--green);color:#fff;border:none;font-size:24px;cursor:pointer;z-index:90;box-shadow:0 4px 16px rgba(29,158,117,0.4);display:flex;align-items:center;justify-content:center}
+.filter-row{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
+.filter-row::-webkit-scrollbar{display:none}
+.f-chip{border:1.5px solid var(--border);border-radius:20px;padding:5px 12px;font-size:12px;font-weight:500;color:var(--text-sub);background:var(--white);cursor:pointer;white-space:nowrap;flex-shrink:0;-webkit-appearance:none}
+.f-chip.active{border-color:var(--green);background:var(--green-bg);color:var(--green-deeper)}
+.date-row{display:flex;gap:8px;align-items:center;margin-bottom:10px}
+.date-row input{flex:1;border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:9px 12px;font-size:14px;color:var(--text);background:var(--white);outline:none;-webkit-appearance:none;font-family:inherit}
+.date-row input:focus{border-color:var(--green)}
+.date-sep{font-size:13px;color:var(--text-hint)}
+.notice-card{background:var(--white);border-radius:var(--radius);border:1px solid var(--border);overflow:hidden}
+.notice-head{background:var(--green);padding:10px 14px;display:flex;align-items:center;justify-content:space-between}
+.notice-head span{font-size:13px;font-weight:700;color:#fff}
+.notice-edit-btn{font-size:12px;color:rgba(255,255,255,0.85);background:none;border:none;cursor:pointer;font-weight:600}
+.notice-body{padding:12px 14px;font-size:14px;color:var(--text);line-height:1.6}
+.notice-ta{width:100%;border:none;outline:none;font-size:14px;color:var(--text);line-height:1.6;resize:none;height:80px;padding:12px 14px;font-family:inherit;display:none}
+.notice-save-btn{background:var(--green);color:#fff;border:none;padding:10px;font-size:13px;font-weight:600;cursor:pointer;width:100%;display:none}
+.excel-btn{background:var(--white);color:var(--green-dark);border:1.5px solid var(--green);border-radius:var(--radius);padding:13px;font-size:14px;font-weight:600;cursor:pointer;width:100%;display:flex;align-items:center;justify-content:center;gap:8px;-webkit-appearance:none}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:300;align-items:flex-end;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:var(--white);border-radius:20px 20px 0 0;padding:20px 20px calc(20px + env(safe-area-inset-bottom));width:100%;max-height:88vh;overflow-y:auto}
+.modal-title{font-size:17px;font-weight:700;color:var(--text);margin-bottom:16px;text-align:center}
+.modal-label{font-size:12px;font-weight:600;color:var(--text-sub);margin-bottom:5px;display:block;margin-top:12px}
+.modal-label:first-of-type{margin-top:0}
+.modal-input{width:100%;border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;font-size:15px;color:var(--text);background:var(--white);outline:none;font-family:inherit;-webkit-appearance:none}
+.modal-input:focus{border-color:var(--green)}
+.modal-select{width:100%;border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:12px 10px;font-size:15px;color:var(--text);background:var(--white);outline:none;font-family:inherit;-webkit-appearance:none}
+.modal-ta{resize:none;height:70px;line-height:1.5}
+.modal-btn-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
+.modal-cancel{background:var(--gray-bg);color:var(--text-sub);border:none;border-radius:var(--radius);padding:13px;font-size:15px;font-weight:600;cursor:pointer}
+.modal-save{background:var(--green);color:#fff;border:none;border-radius:var(--radius);padding:13px;font-size:15px;font-weight:600;cursor:pointer}
+.empty{text-align:center;padding:28px;color:var(--text-hint);font-size:13px}
+.empty-icon{font-size:34px;margin-bottom:8px}
+.toast{position:fixed;bottom:calc(80px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%) translateY(20px);background:#1A1A1A;color:#fff;padding:12px 22px;border-radius:100px;font-size:14px;font-weight:500;opacity:0;transition:all 0.3s;z-index:200;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.live-dot{width:7px;height:7px;border-radius:50%;background:#1D9E75;display:inline-block;margin-right:5px;animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+.wc0{background:#E1F5EE;color:#085041}.wc1{background:#E6F1FB;color:#042C53}.wc2{background:#FAEEDA;color:#412402}.wc3{background:#FBEAF0;color:#4B1528}.wc4{background:#EAF3DE;color:#173404}
+</style>
+</head>
+<body>
+
+<div id="loginScreen">
+  <div class="login-logo">
+    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+  </div>
+  <div class="login-title">관리자 모드</div>
+  <div class="login-sub">출장 업무 통합 관리</div>
+  <div class="login-card">
+    <label class="fl">아이디</label>
+    <input class="fi" type="text" id="loginId" placeholder="admin" autocomplete="off"/>
+    <label class="fl">비밀번호</label>
+    <input class="fi" type="password" id="loginPw" placeholder="••••••" onkeydown="if(event.key==='Enter')doLogin()"/>
+    <button class="login-btn" onclick="doLogin()">로그인</button>
+    <div class="login-err" id="loginErr">아이디 또는 비밀번호가 틀렸습니다</div>
+  </div>
+</div>
+
+<div id="adminApp">
+  <div class="page active" id="page-dash">
+    <div class="top-bar">
+      <div><div class="top-bar-title"><span class="live-dot"></span>대시보드</div><div class="top-bar-sub" id="dashDate"></div></div>
+      <div style="display:flex;gap:8px">
+        <button class="icon-btn" onclick="openSettings()">⚙️</button>
+        <button class="logout-btn" onclick="doLogout()">로그아웃</button>
+      </div>
+    </div>
+    <div class="scroll-area">
+      <div class="notice-card">
+        <div class="notice-head"><span>📢 공지사항</span><button class="notice-edit-btn" onclick="toggleNotice()">수정</button></div>
+        <div class="notice-body" id="noticeBody">오늘도 안전하게 출장 다녀오세요!</div>
+        <textarea class="notice-ta" id="noticeTa" placeholder="공지 내용 입력..."></textarea>
+        <button class="notice-save-btn" id="noticeSaveBtn" onclick="saveNotice()">저장 · 작업자 알림 발송</button>
+      </div>
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-label">오늘 매출</div><div class="stat-value cg" id="dAmt">0</div><div class="stat-sub">원</div></div>
+        <div class="stat-card"><div class="stat-label">오늘 건수</div><div class="stat-value" id="dCount">0</div><div class="stat-sub">건</div></div>
+        <div class="stat-card"><div class="stat-label">이번 달 매출</div><div class="stat-value cg" id="dMonth">0</div><div class="stat-sub">원</div></div>
+        <div class="stat-card"><div class="stat-label">미입금</div><div class="stat-value cr" id="dUnpaid">0</div><div class="stat-sub">건</div></div>
+      </div>
+      <div class="card"><div class="card-title">오늘 출장 일정</div><div id="dashPlans"></div></div>
+      <div class="card"><div class="card-title">오늘 완료 기록</div><div id="dashRecs"></div></div>
+    </div>
+  </div>
+
+  <div class="page" id="page-workers">
+    <div class="top-bar">
+      <div><div class="top-bar-title">작업자 현황</div><div class="top-bar-sub" id="wSub"></div></div>
+      <button class="logout-btn" onclick="doLogout()">로그아웃</button>
+    </div>
+    <div class="scroll-area">
+      <div id="wCards"></div>
+      <div style="background:var(--white);border-radius:var(--radius);border:1px solid var(--border);overflow:hidden">
+        <div style="padding:12px 14px;border-bottom:1px solid var(--border-light);display:flex;align-items:center;justify-content:space-between">
+          <span style="font-size:13px;font-weight:600;color:var(--text-sub)">🗺 실시간 위치</span>
+          <span id="mapUpdated" style="font-size:11px;color:var(--text-hint)"></span>
+        </div>
+        <div id="locationMap"></div>
+        <div id="locOffline" style="display:none;text-align:center;padding:20px;color:var(--text-hint);font-size:12px">위치 정보 없음<br/>작업자 앱 실행 시 표시됩니다</div>
+      </div>
+      <div class="card">
+        <div class="card-title">기록 조회</div>
+        <div class="filter-row" id="wFilter" style="margin-bottom:12px"></div>
+        <div id="wRecs"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="page" id="page-approve">
+    <div class="top-bar">
+      <div><div class="top-bar-title">작업자 승인</div><div class="top-bar-sub" id="approveSub"></div></div>
+      <button class="logout-btn" onclick="doLogout()">로그아웃</button>
+    </div>
+    <div class="scroll-area">
+      <div id="pendingList"></div>
+      <div class="card"><div class="card-title">승인된 작업자</div><div id="approvedList"></div></div>
+    </div>
+  </div>
+
+  <div class="page" id="page-orders">
+    <div class="top-bar">
+      <div><div class="top-bar-title">오더 관리</div><div class="top-bar-sub" id="orderSub"></div></div>
+      <button class="logout-btn" onclick="doLogout()">로그아웃</button>
+    </div>
+    <div class="scroll-area">
+      <div class="filter-row" id="orderFilter" style="margin-bottom:4px"></div>
+      <div id="orderList"></div>
+    </div>
+    <button class="fab" onclick="openOrderModal()">+</button>
+  </div>
+
+  <div class="page" id="page-records">
+    <div class="top-bar">
+      <div><div class="top-bar-title">전체 기록</div><div class="top-bar-sub" id="rSub"></div></div>
+      <button class="logout-btn" onclick="doLogout()">로그아웃</button>
+    </div>
+    <div class="scroll-area">
+      <div class="card">
+        <div class="card-title">기간 · 작업자 필터</div>
+        <div class="date-row"><input type="date" id="fFrom"/><span class="date-sep">~</span><input type="date" id="fTo"/></div>
+        <div class="filter-row" id="rFilter"></div>
+      </div>
+      <div id="allRecs"></div>
+      <button class="excel-btn" onclick="exportExcel()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        전체 엑셀 내보내기
+      </button>
+      <button onclick="backupData()" style="background:var(--blue-bg);color:var(--blue);border:1.5px solid var(--blue);border-radius:var(--radius);padding:13px;font-size:14px;font-weight:600;cursor:pointer;width:100%;display:flex;align-items:center;justify-content:center;gap:8px">💾 JSON 백업</button>
+      <div><input type="file" id="restoreFile" accept=".json" style="display:none" onchange="restoreData(this)"/><button onclick="document.getElementById('restoreFile').click()" style="background:var(--red-bg);color:var(--red-text);border:1.5px solid #E24B4A;border-radius:var(--radius);padding:13px;font-size:14px;font-weight:600;cursor:pointer;width:100%">📂 JSON 복원</button></div>
+    </div>
+  </div>
+
+  <div class="tab-bar">
+    <div class="tab-item active" id="tab-dash" onclick="switchTab('dash')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      대시보드
+    </div>
+    <div class="tab-item" id="tab-workers" onclick="switchTab('workers')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+      작업자
+    </div>
+    <div class="tab-item" id="tab-approve" onclick="switchTab('approve')" style="position:relative">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      승인
+      <div class="tab-badge" id="approveBadge" style="display:none">!</div>
+    </div>
+    <div class="tab-item" id="tab-orders" onclick="switchTab('orders')" style="position:relative">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="2"/></svg>
+      오더
+      <div class="tab-badge" id="newOrderBadge" style="display:none">!</div>
+    </div>
+    <div class="tab-item" id="tab-records" onclick="switchTab('records')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      기록
+    </div>
+  </div>
+</div>
+
+<!-- 설정 모달 -->
+<div class="modal-overlay" id="settingsModal">
+  <div class="modal">
+    <div class="modal-title">⚙️ 비밀번호 변경</div>
+    <label class="modal-label">현재 비밀번호</label><input class="modal-input" type="password" id="curPw"/>
+    <label class="modal-label">새 비밀번호</label><input class="modal-input" type="password" id="newPw"/>
+    <label class="modal-label">새 비밀번호 확인</label><input class="modal-input" type="password" id="newPw2"/>
+    <div class="modal-btn-row">
+      <button class="modal-cancel" onclick="closeSettings()">취소</button>
+      <button class="modal-save" onclick="changePw()">변경</button>
+    </div>
+  </div>
+</div>
+
+<!-- 오더 모달 -->
+<div class="modal-overlay" id="orderModal">
+  <div class="modal">
+    <div class="modal-title">📋 오더 추가</div>
+    <label class="modal-label">담당 작업자</label><select class="modal-select" id="orderWorker"></select>
+    <label class="modal-label">날짜</label><input class="modal-input" type="date" id="orderDate"/>
+    <label class="modal-label">주소</label><input class="modal-input" type="text" id="orderAddr" placeholder="시/도, 상세 주소"/>
+    <label class="modal-label">연락처</label><input class="modal-input" type="tel" id="orderPhone" placeholder="010-0000-0000"/>
+    <label class="modal-label">작업 종류</label>
+    <select class="modal-select" id="orderWork">
+      <option value="">선택</option>
+      <option value="난방설치 및 AS">🔧 난방설치 및 AS</option>
+      <option value="에어컨세척">❄️ 에어컨세척</option>
+    </select>
+    <label class="modal-label">메모 (선택)</label><textarea class="modal-input modal-ta" id="orderMemo" placeholder="특이사항 등..."></textarea>
+    <div class="modal-btn-row">
+      <button class="modal-cancel" onclick="closeOrderModal()">취소</button>
+      <button class="modal-save" onclick="saveOrder()">오더 발송</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- 로그인: 모듈 밖 일반 스크립트 -->
+<script>
+var _loginPending = false;
+
+function doLogin() {
+  var id = document.getElementById('loginId').value.trim();
+  var pw = document.getElementById('loginPw').value;
+  var storedPw = localStorage.getItem('adminPw') || '1234';
+  if (id === 'admin' && pw === storedPw) {
+    document.getElementById('loginErr').style.display = 'none';
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('adminApp').style.display = 'block';
+    _loginPending = true;
+    document.dispatchEvent(new CustomEvent('adminLogin'));
+  } else {
+    document.getElementById('loginErr').style.display = 'block';
+    document.getElementById('loginPw').value = '';
+  }
+}
+function doLogout() {
+  if (!confirm('로그아웃 하시겠습니까?')) return;
+  document.getElementById('adminApp').style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('loginId').value = '';
+  document.getElementById('loginPw').value = '';
+}
+</script>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.1/firebase-app.js";
+import { getFirestore, collection, onSnapshot, query, orderBy, doc, setDoc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAGvmykxwcwBHP_D1Rg755UBIiJHK43bkg",
+  authDomain: "nanbangyulsa.firebaseapp.com",
+  projectId: "nanbangyulsa",
+  storageBucket: "nanbangyulsa.firebasestorage.app",
+  messagingSenderId: "491847724922",
+  appId: "1:491847724922:web:7b10162265fd54ddfe70c3"
+};
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+let records=[], plans=[], orders=[], locations=[];
+let selW='전체', selRW='전체', selOrderFilter='전체';
+let adminPw = localStorage.getItem('adminPw')||'1234';
+const today = new Date().toISOString().slice(0,10);
+const thisMonth = today.slice(0,7);
+const workerMap = {};
+let mapInstance=null, workerMarkers={};
+
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
+function wc(name){const list=Object.keys(workerMap);return 'wc'+(list.indexOf(name)%5);}
+function fmtTime(p){const s=p.timeStart||p.time||'';const e=p.timeEnd||'';return s&&e?s+'~'+e:s||e;}
+
+/* ── 로그인은 모듈 밖 일반 스크립트에서 처리 ── */
+window.doLogout = doLogout;
+
+// 로그인 이벤트 수신 → initApp 실행
+document.addEventListener('adminLogin', function() {
+  initApp();
+});
+
+/* ── 설정 ── */
+window.openSettings=function(){document.getElementById('settingsModal').classList.add('open');};
+window.closeSettings=function(){document.getElementById('settingsModal').classList.remove('open');['curPw','newPw','newPw2'].forEach(i=>document.getElementById(i).value='');};
+window.changePw=async function(){
+  const cur=document.getElementById('curPw').value;
+  const nw=document.getElementById('newPw').value;
+  const nw2=document.getElementById('newPw2').value;
+  if(cur!==adminPw){showToast('현재 비밀번호가 틀렸습니다');return;}
+  if(!nw||nw.length<4){showToast('새 비밀번호는 4자 이상');return;}
+  if(nw!==nw2){showToast('새 비밀번호가 일치하지 않습니다');return;}
+  await setDoc(doc(db,'settings','adminPw'),{pw:nw});
+  adminPw=nw; localStorage.setItem('adminPw',nw);
+  closeSettings(); showToast('✓ 비밀번호 변경 완료');
+};
+
+/* ── 탭 ── */
+window.switchTab=function(tab){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-item').forEach(t=>t.classList.remove('active'));
+  document.getElementById('page-'+tab).classList.add('active');
+  document.getElementById('tab-'+tab).classList.add('active');
+  if(tab==='workers'){renderWorkers();setTimeout(initMap,200);}
+  if(tab==='records')renderAllRecs();
+  if(tab==='orders')renderOrders();
+  if(tab==='approve')renderApprove();
+};
+
+/* ── 공지 ── */
+let noticeEdit=false;
+window.toggleNotice=function(){
+  noticeEdit=!noticeEdit;
+  document.getElementById('noticeBody').style.display=noticeEdit?'none':'block';
+  document.getElementById('noticeTa').style.display=noticeEdit?'block':'none';
+  document.getElementById('noticeSaveBtn').style.display=noticeEdit?'block':'none';
+  if(noticeEdit)document.getElementById('noticeTa').value=document.getElementById('noticeBody').textContent;
+};
+window.saveNotice=async function(){
+  const v=document.getElementById('noticeTa').value.trim();
+  if(!v){showToast('내용을 입력해주세요');return;}
+  document.getElementById('noticeBody').textContent=v;
+  await setDoc(doc(db,'settings','notice'),{text:v,updatedAt:serverTimestamp()});
+  noticeEdit=false;window.toggleNotice();showToast('✓ 공지 저장 · 작업자 알림 발송!');
+};
+
+/* ── 초기화 ── */
+async function initApp(){
+  const now=new Date();
+  const days=['일','월','화','수','목','금','토'];
+  document.getElementById('dashDate').textContent=`${now.getFullYear()}년 ${now.getMonth()+1}월 ${now.getDate()}일 (${days[now.getDay()]})`;
+  const noticeSnap=await getDoc(doc(db,'settings','notice'));
+  if(noticeSnap.exists())document.getElementById('noticeBody').textContent=noticeSnap.data().text;
+  try{const ps=await getDoc(doc(db,'settings','adminPw'));if(ps.exists()){adminPw=ps.data().pw;localStorage.setItem('adminPw',adminPw);}}catch(e){}
+  initFilters();
+  startListening();
+}
+
+function startListening(){
+  onSnapshot(query(collection(db,'records'),orderBy('createdAt','desc')),snap=>{
+    records=snap.docs.map(d=>({id:d.id,...d.data()}));
+    buildWorkerMap();renderDash();renderAllRecs();renderWorkers();
+  });
+  onSnapshot(query(collection(db,'plans'),orderBy('createdAt','asc')),snap=>{
+    plans=snap.docs.map(d=>({id:d.id,...d.data()}));
+    buildWorkerMap();renderDash();renderWorkers();
+  });
+  onSnapshot(query(collection(db,'orders'),orderBy('createdAt','desc')),snap=>{
+    orders=snap.docs.map(d=>({id:d.id,...d.data()}));
+    renderOrders();
+    const n=orders.filter(o=>o.status==='new').length;
+    const b=document.getElementById('newOrderBadge');
+    b.style.display=n>0?'flex':'none'; b.textContent=n;
+  });
+  onSnapshot(collection(db,'locations'),snap=>{
+    locations=snap.docs.map(d=>({id:d.id,...d.data()}));
+    updateMapMarkers();
+    if(locations.length>0){
+      const lat=locations.reduce((a,b)=>(a.timestamp?.seconds||0)>(b.timestamp?.seconds||0)?a:b,locations[0]);
+      if(lat.timestamp){const d=new Date(lat.timestamp.seconds*1000);document.getElementById('mapUpdated').textContent=`${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')} 기준`;}
+    }
+  });
+  onSnapshot(collection(db,'workerRequests'),snap=>{
+    const pending=snap.docs.filter(d=>d.data().status==='pending');
+    const b=document.getElementById('approveBadge');
+    b.style.display=pending.length>0?'flex':'none'; b.textContent=pending.length;
+    if(document.getElementById('page-approve').classList.contains('active'))renderApprove();
+  });
+}
+
+function buildWorkerMap(){
+  [...records,...plans,...orders].forEach(r=>{if(r.worker)workerMap[r.worker]=true;if(r.assignedTo)workerMap[r.assignedTo]=true;});
+}
+
+/* ── 대시보드 ── */
+function renderDash(){
+  const tR=records.filter(r=>r.date===today);
+  const mR=records.filter(r=>r.date&&r.date.startsWith(thisMonth));
+  document.getElementById('dAmt').textContent=tR.reduce((s,r)=>s+(r.amount||0),0).toLocaleString();
+  document.getElementById('dCount').textContent=tR.length;
+  document.getElementById('dMonth').textContent=mR.reduce((s,r)=>s+(r.amount||0),0).toLocaleString();
+  document.getElementById('dUnpaid').textContent=records.filter(r=>!r.paid).length;
+  const tP=plans.filter(p=>p.date===today).sort((a,b)=>(a.timeStart||a.time||'').localeCompare(b.timeStart||b.time||''));
+  document.getElementById('dashPlans').innerHTML=tP.length
+    ?'<div class="rec-list">'+tP.map(p=>`<div class="plan-item-row" onclick="togglePlanDetail('pd-${p.id}')">
+        <div class="plan-dot" style="background:${p.done?'#999994':'#1D9E75'}"></div>
+        <div class="plan-info">
+          <div class="plan-work">${p.work||'작업 미정'}</div>
+          <div class="plan-addr">${p.addr}</div>
+          <div style="margin-top:3px"><span class="w-tag ${wc(p.worker)}">${p.worker}</span>${p.done?' <span style="font-size:10px;color:var(--text-hint)">완료</span>':''}</div>
+        </div>
+        ${fmtTime(p)?`<div class="plan-time">${fmtTime(p)}</div>`:''}
+      </div>
+      <div class="plan-detail-box" id="pd-${p.id}">
+        ${p.phone?`<div class="plan-detail-row"><b>연락처</b><a href="tel:${p.phone}" style="color:var(--green);text-decoration:none">${p.phone} 📞</a></div>`:''}
+        ${p.work?`<div class="plan-detail-row"><b>작업</b>${p.work}</div>`:''}
+        ${p.memo?`<div class="plan-detail-row"><b>메모</b>${p.memo}</div>`:''}
+      </div>`).join('')+'</div>'
+    :'<div class="empty"><div class="empty-icon">📋</div>오늘 출장 일정 없음</div>';
+  document.getElementById('dashRecs').innerHTML=tR.length
+    ?'<div class="rec-list">'+tR.map(r=>recHTML(r)).join('')+'</div>'
+    :'<div class="empty"><div class="empty-icon">📝</div>오늘 완료 기록 없음</div>';
+}
+window.togglePlanDetail=function(id){const el=document.getElementById(id);if(el)el.classList.toggle('open');};
+
+function recHTML(r){
+  return `<div class="rec-item" onclick="toggleRecDetail('${r.id}')">
+    <div class="rec-top">
+      <div class="rec-left">
+        <span class="w-tag ${wc(r.worker)}">${r.worker}</span>
+        <div class="rec-work">${r.work}</div>
+        <div class="rec-date">${r.date} ${r.time||''}</div>
+        <div class="rec-addr">${r.address}</div>
+      </div>
+      <div class="rec-right">
+        <div class="rec-amt">${r.amount?r.amount.toLocaleString()+'원':'-'}</div>
+        <div class="rec-pay">${r.pay}</div>
+        <span class="${r.paid?'paid-y':'paid-n'}">${r.paid?'입금완료':'미확인'}</span>
+      </div>
+    </div>
+    <div class="rec-detail" id="rd-${r.id}">
+      <div class="rec-detail-grid">
+        <div class="rec-detail-box"><div class="rec-detail-label">연락처</div><div class="rec-detail-val">${r.phone?'<a href="tel:'+r.phone+'" style="color:var(--green);text-decoration:none">'+r.phone+' 📞</a>':'-'}</div></div>
+        <div class="rec-detail-box"><div class="rec-detail-label">결제</div><div class="rec-detail-val">${r.pay}${r.depositor?' ('+r.depositor+')':''}</div></div>
+      </div>
+      ${r.memo?'<div class="rec-memo"><div class="rec-detail-label">메모</div><div class="rec-detail-val" style="font-weight:400">'+r.memo+'</div></div>':''}
+    </div>
+  </div>`;
+}
+window.toggleRecDetail=function(id){const el=document.getElementById('rd-'+id);if(el)el.classList.toggle('open');};
+
+/* ── 작업자 ── */
+function renderWorkers(){
+  const workers=Object.keys(workerMap);
+  document.getElementById('wSub').textContent='총 '+workers.length+'명';
+  const chips=['전체',...workers];
+  ['wFilter','rFilter'].forEach(function(fid){
+    const cur=fid==='wFilter'?selW:selRW;
+    document.getElementById(fid).innerHTML=chips.map(function(w){
+      return '<button class="f-chip'+(w===cur?' active':'')+'" onclick="'+(fid==='wFilter'?'setWF':'setRF')+'(this,\''+w+'\')">'+w+'</button>';
+    }).join('');
+  });
+  let html='';
+  workers.forEach(function(w,i){
+    const recs=records.filter(function(r){return r.worker===w;});
+    const tR=recs.filter(function(r){return r.date===today;});
+    const tP=plans.filter(function(p){return p.worker===w&&p.date===today;});
+    const dP=tP.filter(function(p){return p.done;}).length;
+    const tot=recs.reduce(function(s,r){return s+(r.amount||0);},0);
+    const on=tR.length>0;
+    const hasLoc=!!locations.find(function(l){return l.worker===w;});
+    let planHtml='';
+    if(tP.length){
+      tP.forEach(function(p){
+        const tr=fmtTime(p);
+        planHtml+='<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border-light)">'
+          +'<div style="width:6px;height:6px;border-radius:50%;background:'+(p.done?'#999994':'#1D9E75')+';flex-shrink:0"></div>'
+          +'<div style="flex:1;min-width:0">'
+          +'<div style="font-size:12px;font-weight:600;color:'+(p.done?'var(--text-hint)':'var(--text)')+'">'+( p.work||'작업 미정')+'</div>'
+          +'<div style="font-size:11px;color:var(--text-sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+p.addr+'</div>'
+          +'</div>'
+          +(tr?'<div style="font-size:10px;font-weight:600;color:var(--green-dark);background:var(--green-bg);padding:2px 6px;border-radius:20px">'+tr+'</div>':'')
+          +(p.phone?'<a href="tel:'+p.phone+'" onclick="event.stopPropagation()" style="font-size:16px;text-decoration:none">📞</a>':'')
+          +'</div>';
+      });
+    } else {
+      planHtml='<div style="font-size:12px;color:var(--text-hint);padding:8px 0">오늘 일정 없음</div>';
+    }
+    html+='<div class="worker-card" id="wcard-'+i+'" onclick="toggleWorkerPlans('+i+')">'
+      +'<div class="w-av wc'+(i%5)+'">'+w[0]+'</div>'
+      +'<div class="w-info">'
+      +'<div class="w-name">'+w+(hasLoc?' 📍':'')+'</div>'
+      +'<div class="w-meta">오늘 '+tR.length+'건 · 일정 '+dP+'/'+tP.length+'</div>'
+      +'<span class="w-badge" style="'+(on?'background:var(--green-bg);color:var(--green-deeper)':'background:var(--gray-bg);color:var(--text-hint)')+'">'+( on?'작업중':'대기중')+'</span>'
+      +'</div>'
+      +'<div class="w-stats"><div class="w-amt">'+tot.toLocaleString()+'원</div><div class="w-cnt">누적 '+recs.length+'건</div></div>'
+      +'</div>'
+      +'<div class="worker-plans" id="wp-'+i+'">'+planHtml+'</div>';
+  });
+  document.getElementById('wCards').innerHTML=html;
+  renderWRecs();
+}
+window.toggleWorkerPlans=function(i){
+  document.getElementById('wcard-'+i).classList.toggle('expanded');
+  document.getElementById('wp-'+i).classList.toggle('open');
+};
+window.setWF=function(el,v){document.getElementById('wFilter').querySelectorAll('.f-chip').forEach(c=>c.classList.remove('active'));el.classList.add('active');selW=v;renderWRecs();};
+function renderWRecs(){
+  const list=(selW==='전체'?records:records.filter(r=>r.worker===selW)).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  document.getElementById('wRecs').innerHTML=list.length?'<div class="rec-list">'+list.map(r=>recHTML(r)).join('')+'</div>':'<div class="empty">기록 없음</div>';
+}
+
+/* ── 지도 ── */
+function initMap(){
+  if(mapInstance)return;
+  if(typeof L==='undefined')return;
+  mapInstance=L.map('locationMap',{zoomControl:true}).setView([37.5665,126.9780],11);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap',maxZoom:18}).addTo(mapInstance);
+  updateMapMarkers();
+}
+function updateMapMarkers(){
+  if(!mapInstance)return;
+  const locEl=document.getElementById('locOffline');
+  if(!locations.length){locEl.style.display='block';document.getElementById('locationMap').style.display='none';return;}
+  locEl.style.display='none';document.getElementById('locationMap').style.display='block';
+  locations.forEach(loc=>{
+    if(!loc.lat||!loc.lng)return;
+    const workers=Object.keys(workerMap);
+    const colors=['#085041','#042C53','#412402','#4B1528','#173404'];
+    const color=colors[workers.indexOf(loc.worker)%5]||'#1D9E75';
+    const icon=L.divIcon({className:'',html:'<div style="background:'+color+';color:#fff;padding:4px 8px;border-radius:20px;font-size:11px;font-weight:700;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,0.3)">'+loc.worker+'</div>',iconAnchor:[0,0]});
+    if(workerMarkers[loc.worker])workerMarkers[loc.worker].setLatLng([loc.lat,loc.lng]);
+    else workerMarkers[loc.worker]=L.marker([loc.lat,loc.lng],{icon}).addTo(mapInstance).bindPopup(loc.worker);
+  });
+}
+
+/* ── 승인 ── */
+async function renderApprove(){
+  const snap=await getDocs(collection(db,'workerRequests'));
+  const all=snap.docs.map(d=>({id:d.id,...d.data()}));
+  const pending=all.filter(w=>w.status==='pending');
+  const approved=all.filter(w=>w.status==='approved');
+  document.getElementById('approveSub').textContent='대기 '+pending.length+'건 · 승인 '+approved.length+'명';
+  document.getElementById('pendingList').innerHTML=!pending.length
+    ?'<div style="background:var(--green-bg);border-radius:var(--radius);padding:14px;margin-bottom:10px;font-size:13px;color:var(--green-deeper);text-align:center">✓ 대기 중인 요청이 없습니다</div>'
+    :pending.map(w=>'<div style="background:var(--white);border:1.5px solid #E24B4A;border-radius:var(--radius);padding:14px;margin-bottom:10px">'
+      +'<div style="display:flex;align-items:center;gap:12px"><div style="width:40px;height:40px;border-radius:50%;background:var(--amber-bg);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:var(--amber);">'+(w.name?w.name[0]:'?')+'</div>'
+      +'<div style="flex:1"><div style="font-size:15px;font-weight:700;color:var(--text)">'+w.name+'</div><div style="font-size:11px;color:var(--text-hint);margin-top:2px">가입 요청 대기 중</div></div>'
+      +'<span style="font-size:10px;font-weight:700;background:var(--red-bg);color:var(--red-text);padding:3px 8px;border-radius:20px">대기중</span></div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px">'
+      +'<button onclick="rejectWorker(\''+w.id+'\')" style="background:var(--gray-bg);color:var(--text-sub);border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:600;cursor:pointer">✕ 거절</button>'
+      +'<button onclick="approveWorker(\''+w.id+'\',\''+w.name+'\')" style="background:var(--green);color:#fff;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:600;cursor:pointer">✓ 승인</button>'
+      +'</div></div>').join('');
+  document.getElementById('approvedList').innerHTML=!approved.length
+    ?'<div class="empty">승인된 작업자가 없습니다</div>'
+    :approved.map(w=>'<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border-light)">'
+      +'<div style="width:36px;height:36px;border-radius:50%;background:var(--green-bg);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--green-deeper)">'+(w.name?w.name[0]:'?')+'</div>'
+      +'<div style="flex:1;font-size:14px;font-weight:600;color:var(--text)">'+w.name+'</div>'
+      +'<span style="font-size:10px;font-weight:700;background:var(--green-bg);color:var(--green-deeper);padding:3px 8px;border-radius:20px">승인됨</span>'
+      +'<button onclick="revokeWorker(\''+w.id+'\',\''+w.name+'\')" style="background:var(--red-bg);color:var(--red-text);border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer">취소</button>'
+      +'</div>').join('');
+}
+window.approveWorker=async function(id,name){await updateDoc(doc(db,'workerRequests',id),{status:'approved'});showToast('✓ '+name+' 승인 완료!');renderApprove();};
+window.rejectWorker=async function(id){if(!confirm('이 요청을 거절할까요?'))return;await updateDoc(doc(db,'workerRequests',id),{status:'rejected'});showToast('거절 완료');renderApprove();};
+window.revokeWorker=async function(id,name){if(!confirm(name+'의 승인을 취소할까요?'))return;await updateDoc(doc(db,'workerRequests',id),{status:'pending'});showToast(name+' 승인 취소');renderApprove();};
+
+/* ── 오더 ── */
+window.openOrderModal=function(){
+  const workers=Object.keys(workerMap);
+  document.getElementById('orderWorker').innerHTML=workers.map(w=>'<option value="'+w+'">'+w+'</option>').join('');
+  document.getElementById('orderDate').value=today;
+  ['orderAddr','orderPhone','orderMemo'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('orderWork').value='';
+  document.getElementById('orderModal').classList.add('open');
+};
+window.closeOrderModal=function(){document.getElementById('orderModal').classList.remove('open');};
+window.saveOrder=async function(){
+  const assignedTo=document.getElementById('orderWorker').value;
+  const addr=document.getElementById('orderAddr').value.trim();
+  if(!addr){showToast('주소를 입력해주세요');return;}
+  await addDoc(collection(db,'orders'),{assignedTo,date:document.getElementById('orderDate').value,addr,phone:document.getElementById('orderPhone').value.trim(),work:document.getElementById('orderWork').value,memo:document.getElementById('orderMemo').value.trim(),status:'new',createdAt:serverTimestamp()});
+  closeOrderModal();showToast('✓ 오더 발송 완료!');
+};
+window.setOrderFilter=function(el,v){document.getElementById('orderFilter').querySelectorAll('.f-chip').forEach(c=>c.classList.remove('active'));el.classList.add('active');selOrderFilter=v;renderOrders();};
+function renderOrders(){
+  const workers=['전체',...Object.keys(workerMap)];
+  document.getElementById('orderFilter').innerHTML=workers.map(w=>'<button class="f-chip'+(w===selOrderFilter?' active':'')+'" onclick="setOrderFilter(this,\''+w+'\')">'+w+'</button>').join('');
+  const list=orders.filter(o=>selOrderFilter==='전체'||o.assignedTo===selOrderFilter);
+  document.getElementById('orderSub').textContent='총 '+list.length+'건';
+  document.getElementById('orderList').innerHTML=!list.length?'<div class="empty"><div class="empty-icon">📋</div>오더가 없습니다</div>'
+    :list.map(o=>'<div class="order-card status-'+(o.status||'new')+'">'
+      +'<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">'
+      +'<div><div class="order-work">'+(o.work||'작업 미정')+'</div><div class="order-addr">'+o.addr+'</div>'
+      +'<div class="order-meta">'+(o.date||'')+' · <span class="w-tag '+wc(o.assignedTo)+'">'+o.assignedTo+'</span>'+(o.phone?' · <a href="tel:'+o.phone+'" style="color:var(--green);text-decoration:none">'+o.phone+' 📞</a>':'')+'</div>'
+      +(o.memo?'<div class="order-meta" style="margin-top:4px">📝 '+o.memo+'</div>':'')+'</div>'
+      +'<span class="order-badge '+(o.status==='new'?'badge-new':o.status==='viewed'?'badge-viewed':'badge-done')+'">'+(o.status==='new'?'신규':o.status==='viewed'?'확인':'완료')+'</span></div>'
+      +'<div class="order-footer">'
+      +'<button class="order-btn order-btn-del" onclick="deleteOrder(\''+o.id+'\')">🗑 삭제</button>'
+      +(o.status!=='done'?'<button class="order-btn order-btn-done" onclick="doneOrder(\''+o.id+'\')">✓ 완료처리</button>':'')
+      +'</div></div>').join('');
+}
+window.deleteOrder=async function(id){if(!confirm('이 오더를 삭제할까요?'))return;await deleteDoc(doc(db,'orders',id));showToast('✓ 삭제 완료');};
+window.doneOrder=async function(id){await updateDoc(doc(db,'orders',id),{status:'done'});showToast('✓ 완료 처리');};
+
+/* ── 전체 기록 ── */
+function initFilters(){
+  const d=new Date();d.setDate(1);
+  document.getElementById('fFrom').value=d.toISOString().slice(0,10);
+  document.getElementById('fTo').value=today;
+  document.getElementById('fFrom').oninput=renderAllRecs;
+  document.getElementById('fTo').oninput=renderAllRecs;
+}
+window.setRF=function(el,v){document.getElementById('rFilter').querySelectorAll('.f-chip').forEach(c=>c.classList.remove('active'));el.classList.add('active');selRW=v;renderAllRecs();};
+function renderAllRecs(){
+  const from=document.getElementById('fFrom').value;
+  const to=document.getElementById('fTo').value;
+  const list=records.filter(r=>(!from||r.date>=from)&&(!to||r.date<=to)&&(selRW==='전체'||r.worker===selRW)).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  const tot=list.reduce((s,r)=>s+(r.amount||0),0);
+  document.getElementById('rSub').textContent=list.length+'건 · '+tot.toLocaleString()+'원';
+  document.getElementById('allRecs').innerHTML=list.length?'<div class="rec-list">'+list.map(r=>recHTML(r)).join('')+'</div>':'<div class="empty"><div class="empty-icon">📋</div>조건에 맞는 기록이 없습니다</div>';
+}
+
+/* ── 엑셀/백업 ── */
+function dlBlob(blob,fname){const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=fname;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(url);document.body.removeChild(a);},1500);}
+window.exportExcel=function(){
+  const from=document.getElementById('fFrom').value;
+  const to=document.getElementById('fTo').value;
+  const list=records.filter(r=>(!from||r.date>=from)&&(!to||r.date<=to)&&(selRW==='전체'||r.worker===selRW)).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  const rows=list.map((r,i)=>({'No':list.length-i,'날짜':r.date,'시간':r.time||'','작업자':r.worker,'주소':r.address,'연락처':r.phone,'작업내용':r.work,'메모':r.memo||'','결제':r.pay,'금액(원)':r.amount||0,'입금확인':r.paid?'완료':'미확인'}));
+  if(typeof XLSX!=='undefined'){
+    try{const ws=XLSX.utils.json_to_sheet(rows);ws['!cols']=[{wch:4},{wch:12},{wch:8},{wch:10},{wch:28},{wch:15},{wch:14},{wch:20},{wch:8},{wch:12},{wch:10}];const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,'전체기록',ws);const out=XLSX.write(wb,{bookType:'xlsx',type:'array'});dlBlob(new Blob([out],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}),`관리자기록_${today.replace(/-/g,'')}.xlsx`);showToast('✓ 엑셀 저장 완료!');return;}catch(e){}
+  }
+  const h=['No','날짜','시간','작업자','주소','연락처','작업내용','메모','결제','금액(원)','입금확인'];
+  const csv=[h.join(',')].concat(rows.map(r=>h.map(k=>'"'+String(r[k]??'').replace(/"/g,'""')+'"').join(','))).join('\n');
+  dlBlob(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'}),`관리자기록_${today.replace(/-/g,'')}.csv`);
+  showToast('✓ CSV 저장 완료!');
+};
+window.backupData=async function(){
+  showToast('백업 중...');
+  const [rS,pS]=await Promise.all([getDocs(query(collection(db,'records'),orderBy('createdAt','desc'))),getDocs(query(collection(db,'plans'),orderBy('createdAt','asc')))]);
+  const data={backupDate:new Date().toISOString(),records:rS.docs.map(d=>({id:d.id,...d.data(),createdAt:d.data().createdAt?.seconds||null})),plans:pS.docs.map(d=>({id:d.id,...d.data(),createdAt:d.data().createdAt?.seconds||null}))};
+  dlBlob(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),`출장앱_백업_${today.replace(/-/g,'')}.json`);
+  showToast('✓ 백업 완료!');
+};
+window.restoreData=async function(input){
+  const file=input.files[0];if(!file)return;
+  if(!confirm('백업 데이터를 복원합니다. 기존 데이터와 합쳐집니다. 계속할까요?'))return;
+  const text=await file.text();
+  try{
+    const data=JSON.parse(text);let cnt=0;
+    for(const r of (data.records||[])){const {id,createdAt,...rest}=r;await addDoc(collection(db,'records'),{...rest,createdAt:serverTimestamp(),restored:true});cnt++;}
+    showToast('✓ '+cnt+'건 복원 완료!');
+  }catch(e){showToast('복원 실패: 올바른 백업 파일이 아닙니다');}
+  input.value='';
+};
+</script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</body>
+</html>
