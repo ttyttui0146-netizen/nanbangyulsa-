@@ -126,6 +126,10 @@ input:checked+.toggle-slider::before{transform:translateX(22px)}
 .cal-event-plan.done{background:#F3F4F6;color:#9CA3AF;text-decoration:line-through}
 .cal-event-rec{background:#DBEAFE;color:#1E40AF}
 .cal-more-tag{font-size:9px;color:var(--text-hint);padding:1px 3px}
+/* 색상 팔레트 */
+.color-palette{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+.color-swatch{width:30px;height:30px;border-radius:6px;cursor:pointer;border:2.5px solid transparent;transition:all 0.15s;flex-shrink:0}
+.color-swatch.active{border-color:#1A1A1A;transform:scale(1.15)}
 /* 선택 날짜 상세 패널 */
 .cal-detail{background:var(--white);border-top:2px solid var(--green);overflow:hidden}
 .cal-detail-header{padding:12px 16px 10px;border-bottom:1px solid var(--border-light);display:flex;align-items:center;justify-content:space-between}
@@ -361,6 +365,8 @@ input:checked+.toggle-slider::before{transform:translateX(22px)}
       <option value="난방설치 및 AS">🔧 난방설치 및 AS</option>
       <option value="에어컨세척">❄️ 에어컨세척</option>
     </select>
+    <label class="label">태그 색상</label>
+    <div class="color-palette" id="planColorPalette"></div>
     <label class="label">메모 (선택)</label>
     <input class="input-field" id="planMemo" placeholder="특이사항 등..."/>
     <div class="modal-btn-row">
@@ -439,6 +445,8 @@ input:checked+.toggle-slider::before{transform:translateX(22px)}
       <option value="난방설치 및 AS">🔧 난방설치 및 AS</option>
       <option value="에어컨세척">❄️ 에어컨세척</option>
     </select>
+    <label class="label">태그 색상</label>
+    <div class="color-palette" id="peColorPalette"></div>
     <label class="label">메모</label>
     <input class="input-field" id="peMemo" placeholder="특이사항 등..."/>
     <div style="margin-top:10px">
@@ -525,6 +533,40 @@ function fmtPhone(el) {
   el.value = v;
 }
 window.fmtPhone = fmtPhone;
+
+/* ── 색상 팔레트 ── */
+const COLOR_PRESETS = [
+  { bg: '#D1FAE5', text: '#065F46', label: '초록' },
+  { bg: '#DBEAFE', text: '#1E40AF', label: '파랑' },
+  { bg: '#FEE2E2', text: '#991B1B', label: '빨강' },
+  { bg: '#FEF3C7', text: '#92400E', label: '노랑' },
+  { bg: '#EDE9FE', text: '#5B21B6', label: '보라' },
+  { bg: '#FCE7F3', text: '#9D174D', label: '분홍' },
+  { bg: '#FFEDD5', text: '#9A3412', label: '주황' },
+  { bg: '#D1FAF9', text: '#0E5E5A', label: '청록' },
+  { bg: '#E0E7FF', text: '#3730A3', label: '남색' },
+  { bg: '#F3F4F6', text: '#374151', label: '회색' },
+  { bg: '#1D9E75', text: '#FFFFFF', label: '진초록' },
+  { bg: '#1E40AF', text: '#FFFFFF', label: '진파랑' },
+  { bg: '#991B1B', text: '#FFFFFF', label: '진빨강' },
+  { bg: '#374151', text: '#FFFFFF', label: '검정' },
+];
+let planColor = COLOR_PRESETS[0]; // 추가 모달 선택색
+let peColor   = COLOR_PRESETS[0]; // 수정 모달 선택색
+
+function renderColorPalette(containerId, currentBg, onSelect) {
+  const el = document.getElementById(containerId);
+  el.innerHTML = '';
+  COLOR_PRESETS.forEach((c, i) => {
+    const sw = document.createElement('div');
+    sw.className = 'color-swatch' + (c.bg === currentBg ? ' active' : '');
+    sw.style.background = c.bg;
+    sw.style.border = c.bg === currentBg ? '2.5px solid #1A1A1A' : '2.5px solid transparent';
+    sw.title = c.label;
+    sw.onclick = () => { onSelect(c); renderColorPalette(containerId, c.bg, onSelect); };
+    el.appendChild(sw);
+  });
+}
 
 /* ── 작업자 ── */
 function initWorker() {
@@ -780,6 +822,8 @@ function openPlanModal() {
   const mm = String(now.getMinutes()).padStart(2,'0');
   document.getElementById('planTimeStart').value = `${hh}:${mm}`;
   document.getElementById('planTimeEnd').value = '';
+  planColor = COLOR_PRESETS[0];
+  renderColorPalette('planColorPalette', planColor.bg, c => { planColor = c; });
   document.getElementById('planModal').classList.add('open');
 }
 function closePlanModal() { document.getElementById('planModal').classList.remove('open'); }
@@ -795,15 +839,17 @@ async function savePlan() {
   const memo = document.getElementById('planMemo').value.trim();
   const targetDate = document._planTargetDate || getTodayStr();
   document._planTargetDate = null;
+  const colorBg = planColor.bg;
+  const colorText = planColor.text;
   if (!addr) { showToast('주소를 입력해주세요'); return; }
   showSync(true);
   try {
     const newRef = await addDoc(collection(db, 'plans'), {
       date: targetDate, addr, phone, timeStart, timeEnd, work, memo,
+      colorBg, colorText,
       worker: fixedWorker, done: false, createdAt: serverTimestamp()
     });
-    // 서버 응답 기다리지 않고 로컬에 즉시 반영
-    const newItem = { id: newRef.id, date: targetDate, addr, phone, timeStart, timeEnd, work, memo, worker: fixedWorker, done: false };
+    const newItem = { id: newRef.id, date: targetDate, addr, phone, timeStart, timeEnd, work, memo, colorBg, colorText, worker: fixedWorker, done: false };
     plans = [...plans.filter(p => p.id !== newRef.id), newItem];
     renderPlans();
     renderFormPlans();
@@ -845,19 +891,25 @@ function renderPlans() {
     const tStart = p.timeStart || p.time || '';
     const tEnd = p.timeEnd || '';
     const timeBadge = tStart ? (tEnd ? `${tStart}~${tEnd}` : tStart) : '';
+    const tagBg = p.colorBg || '#D1FAE5';
+    const tagTx = p.colorText || '#065F46';
     const div = document.createElement('div');
     div.className = 'plan-item' + (p.done ? ' done' : '');
+    if (!p.done && p.colorBg) {
+      div.style.borderColor = p.colorBg;
+      div.style.background = p.colorBg + '18';
+    }
     div.innerHTML = `
       <div class="plan-item-header" onclick="openPlanEditModal('${p.id}')">
-        <div class="plan-check" onclick="event.stopPropagation(); togglePlan('${p.id}')">
+        <div class="plan-check" onclick="event.stopPropagation(); togglePlan('${p.id}')" style="${!p.done&&p.colorBg?'border-color:'+p.colorBg:''}">
           <svg class="plan-check-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
         </div>
         <div class="plan-info">
           <div class="plan-name">${p.work?'<span style="font-weight:400;color:var(--text-sub)">'+(p.work==='에어컨세척'?'❄️ 에어컨세척':'🔧 난방설치 및 AS')+'</span>':'작업 미정'}</div>
           <div class="plan-addr">${p.addr}</div>
         </div>
-        ${timeBadge?`<div class="plan-time-badge" style="font-size:11px">${timeBadge}</div>`:''}
-        ${p.phone?`<a href="tel:${p.phone}" onclick="event.stopPropagation()" style="display:flex;align-items:center;justify-content:center;width:34px;height:34px;background:var(--green-bg);border-radius:50%;flex-shrink:0;text-decoration:none;font-size:16px">📞</a>`:''}
+        ${timeBadge?`<div class="plan-time-badge" style="font-size:11px;background:${tagBg};color:${tagTx}">${timeBadge}</div>`:''}
+        ${p.phone?`<a href="tel:${p.phone}" onclick="event.stopPropagation()" style="display:flex;align-items:center;justify-content:center;width:34px;height:34px;background:${tagBg};border-radius:50%;flex-shrink:0;text-decoration:none;font-size:16px">📞</a>`:''}
         <span style="font-size:11px;color:var(--text-hint)">✏️</span>
       </div>`;
     area.appendChild(div);
@@ -906,6 +958,8 @@ function openPlanEditModal(id) {
   document.getElementById('peTimeEnd').value = p.timeEnd || '';
   document.getElementById('peWork').value = p.work || '';
   document.getElementById('peMemo').value = p.memo || '';
+  peColor = COLOR_PRESETS.find(c => c.bg === p.colorBg) || COLOR_PRESETS[0];
+  renderColorPalette('peColorPalette', peColor.bg, c => { peColor = c; });
   document.getElementById('planEditModal').classList.add('open');
 }
 function closePlanEditModal() {
@@ -926,6 +980,8 @@ async function savePlanEdit() {
       timeEnd: document.getElementById('peTimeEnd').value,
       work: document.getElementById('peWork').value,
       memo: document.getElementById('peMemo').value.trim(),
+      colorBg: peColor.bg,
+      colorText: peColor.text,
     });
     closePlanEditModal();
     showToast('✓ 수정 완료!');
@@ -1053,10 +1109,13 @@ function renderCalendar() {
       dayPlans.forEach(p => {
         if (tagCount >= maxTags) return;
         const tag = document.createElement('span');
-        tag.className = 'cal-event-tag cal-event-plan' + (p.done ? ' done' : '');
-        // 주소에서 짧게 표시 (마감 포함)
+        tag.className = 'cal-event-tag' + (p.done ? ' cal-event-plan done' : '');
         const label = p.work ? (p.work === '에어컨세척' ? '❄️'+shortAddr(p.addr) : '🔧'+shortAddr(p.addr)) : shortAddr(p.addr);
         tag.textContent = label;
+        if (!p.done) {
+          tag.style.background = p.colorBg || '#D1FAE5';
+          tag.style.color = p.colorText || '#065F46';
+        }
         cell.appendChild(tag);
         tagCount++;
       });
@@ -1112,14 +1171,17 @@ function renderCalDetail(dateStr) {
       html += `<div class="cal-section-label">🗓 출장 일정 (${dayPlans.length}건)</div>`;
       dayPlans.forEach(p => {
         const timeBadge = fmtTimeBadge(p);
+        const dotColor = p.done ? '#999994' : (p.colorBg || 'var(--green)');
+        const tagBg = p.colorBg || '#D1FAE5';
+        const tagTx = p.colorText || '#065F46';
         html += `<div class="cal-plan-row" style="cursor:pointer">
-          <div class="cal-plan-dot"></div>
+          <div class="cal-plan-dot" style="background:${dotColor}"></div>
           <div class="cal-plan-info" onclick="openPlanEditModal('${p.id}')">
             <div class="cal-plan-name">${p.work||'작업 미정'}${p.done?' <span style="color:var(--text-hint);font-size:11px">완료</span>':''}</div>
             <div class="cal-plan-sub">${p.addr}</div>
           </div>
-          ${timeBadge?`<div class="cal-plan-time">${timeBadge}</div>`:''}
-          ${p.phone?`<a href="tel:${p.phone}" style="display:flex;align-items:center;justify-content:center;width:34px;height:34px;background:var(--green-bg);border-radius:50%;flex-shrink:0;text-decoration:none;font-size:15px">📞</a>`:''}
+          ${timeBadge?`<div class="cal-plan-time" style="background:${tagBg};color:${tagTx}">${timeBadge}</div>`:''}
+          ${p.phone?`<a href="tel:${p.phone}" style="display:flex;align-items:center;justify-content:center;width:34px;height:34px;background:${tagBg};border-radius:50%;flex-shrink:0;text-decoration:none;font-size:15px">📞</a>`:''}
           <span onclick="openPlanEditModal('${p.id}')" style="font-size:11px;color:var(--text-hint)">✏️</span>
         </div>`;
       });
