@@ -1221,6 +1221,8 @@ function openPlanModalForDate(dateStr) {
   const mm = String(now.getMinutes()).padStart(2,'0');
   document.getElementById('planTimeStart').value = `${hh}:${mm}`;
   document.getElementById('planTimeEnd').value = '';
+  planColor = COLOR_PRESETS[0];
+  renderColorPalette('planColorPalette', planColor.bg, c => { planColor = c; });
   document.getElementById('planModal').classList.add('open');
 }
 window.openPlanModalForDate = openPlanModalForDate;
