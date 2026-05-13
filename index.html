@@ -128,7 +128,7 @@ input:checked+.toggle-slider::before{transform:translateX(22px)}
 .cal-more-tag{font-size:9px;color:var(--text-hint);padding:1px 3px}
 /* 색상 팔레트 */
 .color-palette{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
-.color-swatch{width:30px;height:30px;border-radius:6px;cursor:pointer;border:2.5px solid transparent;transition:all 0.15s;flex-shrink:0}
+.color-swatch{width:30px;height:30px;border-radius:6px;cursor:pointer;border:2.5px solid transparent;transition:all 0.15s;flex-shrink:0;display:inline-block}
 .color-swatch.active{border-color:#1A1A1A;transform:scale(1.15)}
 /* 선택 날짜 상세 패널 */
 .cal-detail{background:var(--white);border-top:2px solid var(--green);overflow:hidden}
@@ -557,8 +557,8 @@ let peColor   = COLOR_PRESETS[0]; // 수정 모달 선택색
 function renderColorPalette(containerId, currentBg, onSelect) {
   const el = document.getElementById(containerId);
   el.innerHTML = '';
-  COLOR_PRESETS.forEach((c, i) => {
-    const sw = document.createElement('div');
+  COLOR_PRESETS.forEach((c) => {
+    const sw = document.createElement('span');
     sw.className = 'color-swatch' + (c.bg === currentBg ? ' active' : '');
     sw.style.background = c.bg;
     sw.style.border = c.bg === currentBg ? '2.5px solid #1A1A1A' : '2.5px solid transparent';
